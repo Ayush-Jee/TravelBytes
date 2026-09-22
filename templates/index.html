@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TravelBytes AI</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <!-- =========================================================
+     NAVBAR
+========================================================= -->
+
+    <header class="navbar">
+
+        <div class="logo">
+            ✈️ TravelBytes <span>AI</span>
+        </div>
+
+        <div class="nav-right">
+            <span>🌐 India</span>
+            <!-- <button class="login-btn" type="button">
+                Login
+            </button> -->
+        </div>
+
+    </header>
+
+
+    <!-- =========================================================
+     HERO
+========================================================= -->
+
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <span class="badge">
+                AI-POWERED TOURISM CO-PILOT
+            </span>
+
+            <h1>
+                EffortLess Routes.
+                <br>
+                <span>Unforgettable Moments.</span>
+            </h1>
+
+            <p>
+                TravelBytes AI creates personalized travel plans
+                and automatically adapts them when real-world
+                conditions change.
+            </p>
+
+            <div class="hero-features">
+
+                <div>
+                    🤖
+                    <strong>AI Planning</strong>
+                </div>
+
+                <div>
+                    ⚡
+                    <strong>Live Adaptation</strong>
+                </div>
+
+                <div>
+                    🌍
+                    <strong>Local Ecosystem</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+     MAIN DASHBOARD
+========================================================= -->
+
+    <main class="container">
+
+
+        <!-- =====================================================
+         LEFT : PLAN YOUR TRIP
+    ====================================================== -->
+
+        <section class="preferences card">
+
+            <div class="card-title">
+
+                <div>
+
+                    <h2>
+                        Plan Your Trip
+                    </h2>
+
+                    <p>
+                        Tell us what kind of experience you want.
+                    </p>
+
+                </div>
+
+                <span class="ai-icon">
+                    ✨
+                </span>
+
+            </div>
+
+
+            <!-- FORM -->
+
+            <form id="travelForm">
+
+
+                <!-- DESTINATION -->
+
+                <label for="destination">
+                    Destination
+                </label>
+
+                <div class="input-box">
+
+                    <span>📍</span>
+
+                    <input type="text" id="destination" name="destination" value="Kolkata"
+                        placeholder="Enter destination" required>
+
+                </div>
+
+
+                <!-- DURATION + BUDGET -->
+
+                <div class="two-column">
+
+
+                    <!-- DURATION -->
+
+                    <div>
+
+                        <label for="duration">
+                            Duration
+                        </label>
+
+                        <select id="duration" name="duration">
+
+                            <option value="1">
+                                1 Day
+                            </option>
+
+                            <option value="2">
+                                2 Days
+                            </option>
+
+                            <option value="3" selected>
+                                3 Days
+                            </option>
+
+                            <option value="4">
+                                4 Days
+                            </option>
+
+                            <option value="5">
+                                5 Days
+                            </option>
+
+                            <option value="6">
+                                6 Days
+                            </option>
+
+                            <option value="7">
+                                7 Days
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- BUDGET -->
+
+                    <div>
+
+                        <label for="budget">
+                            Budget / Person
+                        </label>
+
+                        <input type="number" id="budget" name="budget" value="8000" min="1" placeholder="₹ 8,000">
+
+                    </div>
+
+                </div>
+
+
+                <!-- TRAVELLING WITH -->
+
+                <label for="travellingWith">
+                    Travelling With
+                </label>
+
+                <select id="travellingWith" name="travellingWith">
+
+                    <option value="Solo">
+                        Solo
+                    </option>
+
+                    <option value="Friends" selected>
+                        Friends
+                    </option>
+
+                    <option value="Family">
+                        Family
+                    </option>
+
+                    <option value="Couple">
+                        Couple
+                    </option>
+
+                </select>
+
+
+                <!-- INTERESTS -->
+
+                <label>
+                    Your Interests
+                </label>
+
+                <div class="interests">
+
+
+                    <button type="button" class="interest-btn active" data-interest="Heritage">
+                        🏛️ Heritage
+                    </button>
+
+
+                    <button type="button" class="interest-btn" data-interest="Food">
+                        🍴 Food
+                    </button>
+
+
+                    <button type="button" class="interest-btn" data-interest="Nature">
+                        🌿 Nature
+                    </button>
+
+
+                    <button type="button" class="interest-btn" data-interest="Shopping">
+                        🛍️ Shopping
+                    </button>
+
+
+                    <button type="button" class="interest-btn" data-interest="Culture">
+                        🎭 Culture
+                    </button>
+
+
+                    <button type="button" class="interest-btn" data-interest="Adventure">
+                        🏔️ Adventure
+                    </button>
+
+                </div>
+
+
+                <!-- HIDDEN INTEREST VALUE -->
+
+                <input type="hidden" id="interests" name="interests" value="Heritage">
+
+
+                <!-- GENERATE -->
+
+                <button type="submit" id="generateBtn" class="generate-btn">
+
+                    ✨ Generate My Dynamic Plan
+
+                </button>
+
+
+            </form>
+
+
+            <!-- PRIVACY -->
+
+            <div class="privacy">
+
+                🔒 Your preferences are used only to
+                personalize your trip.
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =====================================================
+         RIGHT : LIVE TRAVEL DASHBOARD
+    ====================================================== -->
+
+        <section class="results card">
+
+
+            <!-- STATUS BAR -->
+
+            <div class="status-bar">
+
+                <div class="status green" id="weatherStatus">
+                    <span></span>
+                    Weather
+                </div>
+
+
+                <div class="status green">
+
+                    <span></span>
+                    Traffic
+
+                </div>
+
+
+                <div class="status green">
+
+                    <span></span>
+                    Availability
+
+                </div>
+
+
+                <div class="status blue">
+
+                    🤖 AI Active
+
+                </div>
+
+            </div>
+
+
+
+            <!-- MAP -->
+
+            <div class="map">
+
+                <div class="map-road road1"></div>
+
+                <div class="map-road road2"></div>
+
+
+                <div class="map-pin pin1">
+                    📍
+                </div>
+
+                <div class="map-pin pin2">
+                    📍
+                </div>
+
+                <div class="map-pin pin3">
+                    📍
+                </div>
+
+
+                <div class="map-label" id="mapLabel">
+                    Tourism Zone
+                </div>
+
+            </div>
+
+
+
+            <!-- DYNAMIC ALERT -->
+
+            <div id="dynamicAlert" class="dynamic-alert" style="display:none;">
+            </div>
+
+
+
+            <!-- RESULT -->
+
+            <div id="result">
+
+                <div class="empty-state">
+
+                    <div class="empty-icon">
+                        ✈️
+                    </div>
+
+                    <h2>
+                        Your AI itinerary will appear here
+                    </h2>
+
+                    <p>
+                        Enter your preferences and click
+                        <b>
+                            Generate My Dynamic Plan
+                        </b>.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+             EXPLORE DESTINATION
+        ================================================== -->
+
+            <section id="businessSection" class="business-section">
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <span class="section-kicker">
+                            CONNECT
+                        </span>
+
+                        <h2>
+                            Explore Your Destination
+                        </h2>
+
+                        <p>
+                            Discover live hotels, restaurants,
+                            guides and experiences.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- FILTERS -->
+
+                <div id="businessFilters" class="business-filters">
+
+                    <button type="button" class="filter-btn active" data-ecosystem-category="all">
+                        🌍 All
+                    </button>
+
+                    <button type="button" class="filter-btn" data-ecosystem-category="hotels">
+                        🏨 Hotels
+                    </button>
+
+                    <button type="button" class="filter-btn" data-ecosystem-category="restaurants">
+                        🍴 Restaurants
+                    </button>
+
+                    <button type="button" class="filter-btn" data-ecosystem-category="guides">
+                        🧭 Guides
+                    </button>
+
+                    <button type="button" class="filter-btn" data-ecosystem-category="experiences">
+                        ✨ Experiences
+                    </button>
+
+                </div>
+
+
+                <!-- LIVE RESULTS -->
+
+                <div id="businessResult" class="business-grid">
+
+                    <div class="ecosystem-empty">
+
+                        <div class="empty-icon">
+                            🌍
+                        </div>
+
+                        <h3>
+                            Explore live tourism services
+                        </h3>
+
+                        <p>
+                            Generate your trip to discover
+                            local tourism providers.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+        </section>
+
+    </main>
+
+
+
+    <!-- =========================================================
+     LIVE DEMO
+========================================================= -->
+
+    <section class="demo-section">
+
+        <div>
+
+            <span class="demo-badge">
+                🎬 LIVE MODE
+            </span>
+
+            <h2>
+                Check your Live condition 
+            </h2>
+
+            <p>
+                Simulate a real-world travel disruption and
+                watch TravelBytes AI automatically modify
+                the itinerary.
+            </p>
+
+        </div>
+
+
+        <button type="button" id="replanDemoBtn" class="simulate-btn">
+
+            ⚡ Sync Now
+
+        </button>
+
+    </section>
+
+
+
+    <!-- =========================================================
+     FOOTER
+========================================================= -->
+
+    <footer>
+
+        <strong>
+            TravelBytes AI
+        </strong>
+
+        <span>
+            AI-powered dynamic tourism ecosystem
+        </span>
+
+        <span>
+            SIH 2026 Prototype
+        </span>
+
+    </footer>
+
+
+
+    <!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+
+
+</body>
+
+</html>

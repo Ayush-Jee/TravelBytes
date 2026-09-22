@@ -1,0 +1,892 @@
+TravelBytes AI — Day 1 Complete Notes
+1. Day 1 Overview
+
+Project Name: TravelBytes AI
+Project Type: AI-powered Dynamic Tourism Platform
+Hackathon: Smart India Hackathon 2026
+Backend: Python + Flask
+Frontend: HTML + CSS + JavaScript
+Database: SQLite
+
+Day 1 Main Goal
+
+Day 1 ka main objective tha project ka basic working foundation banana.
+
+End of Day 1 tak humne:
+
+Python environment setup kiya
+Virtual environment banaya
+Flask install kiya
+Flask backend create kiya
+HTML frontend create kiya
+CSS styling add ki
+JavaScript se frontend-backend connection banaya
+SQLite database connect kiya
+Tourist places ka data store kiya
+Recommendation engine banaya
+AI Match Score calculate kiya
+Day-wise itinerary generate karna implement kiya
+2. TravelBytes AI kya hai?
+
+TravelBytes AI ek AI-powered dynamic tourism planning assistant hai.
+
+Normal travel planner generally:
+
+User Input
+     ↓
+Recommendations
+     ↓
+Itinerary
+
+TravelBytes AI ka final goal:
+
+User Input
+     ↓
+AI Recommendation
+     ↓
+Itinerary
+     ↓
+Real-Time Conditions
+     ↓
+Weather / Traffic / Closure
+     ↓
+AI Re-planning
+     ↓
+Updated Itinerary
+
+Iska main USP hai:
+
+TravelBytes AI doesn't just plan the trip — it continuously adapts the trip.
+
+Day 1 mein humne iska basic planning foundation banaya.
+
+3. Technology Stack
+Frontend
+HTML
+
+HTML ka use website ka structure banane ke liye kiya.
+
+Example:
+
+<h1>TravelBytes AI</h1>
+
+Form:
+
+<form id="travelForm">
+
+Input fields:
+
+<input id="destination">
+<input id="duration">
+<input id="budget">
+<input id="interests">
+CSS
+
+CSS ka use website ko visually better banane ke liye kiya.
+
+Example:
+
+.place-card {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+CSS se:
+
+cards
+spacing
+borders
+colors
+layout
+
+control kiya gaya.
+
+JavaScript
+
+JavaScript frontend ko interactive banata hai.
+
+User form submit karta hai:
+
+form.addEventListener("submit", async function(event) {
+
+JavaScript Flask backend ko request bhejta hai:
+
+fetch("/api/plan", {
+    method: "POST",
+
+Aur backend se response receive karta hai.
+
+4. Backend — Flask
+
+Humne Python ke saath Flask framework use kiya.
+
+Flask ka purpose hai:
+
+Frontend aur backend ke beech communication establish karna aur API endpoints provide karna.
+
+Basic Flask application:
+
+from flask import Flask, render_template, jsonify, request
+
+app = Flask(__name__)
+5. Flask Routes
+
+Day 1 mein important routes banaye.
+
+/
+@app.route("/")
+def home():
+    return render_template("index.html")
+Purpose
+
+Jab user:
+
+http://127.0.0.1:5000/
+
+open karta hai, Flask index.html return karta hai.
+
+Flow:
+
+Browser
+   ↓
+/
+   ↓
+Flask
+   ↓
+index.html
+6. Health API
+
+Humne backend check karne ke liye health endpoint banaya:
+
+@app.route("/api/health")
+def health():
+    return jsonify({
+        "status": "success",
+        "message": "TravelBytes AI backend is running!"
+    })
+
+Iska purpose hai check karna ki backend properly running hai ya nahi.
+
+URL:
+
+/api/health
+
+Expected response:
+
+{
+    "status": "success",
+    "message": "TravelBytes AI backend is running!"
+}
+Why useful?
+
+Deployment ke time health endpoint se quickly check kar sakte hain ki server alive hai ya nahi.
+
+7. Main Planning API
+
+Day 1 ka sabse important backend endpoint:
+
+/api/plan
+
+Ye POST request accept karta hai.
+
+@app.route("/api/plan", methods=["POST"])
+def create_plan():
+
+User ka data receive hota hai:
+
+data = request.get_json()
+
+Then:
+
+destination = data.get("destination", "")
+duration = int(data.get("duration", 1))
+budget = float(data.get("budget", 0))
+interests = data.get("interests", "")
+
+Example user input:
+
+{
+    "destination": "Kolkata",
+    "duration": 3,
+    "budget": 8000,
+    "interests": "heritage, food, culture"
+}
+8. Database — SQLite
+
+Day 1 mein humne SQLite use kiya.
+
+SQLite ek lightweight relational database hai.
+
+Iska advantage:
+
+Separate database server ki zarurat nahi
+Simple setup
+Python ke saath easily work karta hai
+Hackathon prototype ke liye useful
+Data ek .db file mein store ho sakta hai
+
+Hamari database file:
+
+travelbytes.db
+9. Database Connection
+
+database.py mein:
+
+def get_connection():
+    connection = sqlite3.connect(DATABASE)
+    connection.row_factory = sqlite3.Row
+    return connection
+sqlite3.connect()
+
+Database se connection establish karta hai.
+
+row_factory
+
+Database rows ko dictionary-like format mein access karne mein help karta hai.
+
+Example:
+
+place["name"]
+10. Places Table
+
+Humne places table create kiya.
+
+Structure:
+
+places
+│
+├── id
+├── name
+├── city
+├── category
+├── cost
+├── duration
+├── rating
+├── indoor
+└── tags
+Fields ka meaning
+Field	Purpose
+id	Unique ID
+name	Tourist place ka naam
+city	City
+category	Heritage, Museum, Nature etc.
+cost	Estimated cost
+duration	Visit duration
+rating	Place rating
+indoor	Indoor/outdoor indicator
+tags	Interest matching
+11. Day 1 Tourism Data
+
+Initial database mein Kolkata ke places add kiye:
+
+Victoria Memorial
+Category: Heritage
+Cost: ₹50
+Duration: 2.5 hours
+Rating: 4.6
+Tags: heritage, history, photography
+Indian Museum
+Category: Museum
+Cost: ₹50
+Duration: 2.5 hours
+Rating: 4.5
+Indoor: Yes
+Tags: history, culture, museum
+Eco Park
+Category: Nature
+Cost: ₹50
+Duration: 3 hours
+Rating: 4.4
+Indoor: No
+Tags: nature, family, photography
+Science City
+Category: Science
+Cost: ₹100
+Duration: 3 hours
+Rating: 4.5
+Indoor: Yes
+Tags: science, family, education
+Park Street
+Category: Food
+Cost: ₹500
+Duration: 2 hours
+Rating: 4.4
+Tags: food, shopping, nightlife
+12. Database se Data Fetch Karna
+
+Function:
+
+def get_places(city):
+
+SQL query:
+
+SELECT * FROM places
+WHERE LOWER(city) = LOWER(?)
+
+Iska purpose hai selected city ke tourist places retrieve karna.
+
+Example:
+
+Kolkata
+
+dene par Kolkata ke places milenge.
+
+13. Recommendation Engine
+
+Day 1 ka important AI component hai:
+
+recommendation.py
+
+Is file mein recommendation logic banaya.
+
+Basic concept:
+
+User ki preferences ke according available tourist places ko score karke rank karna.
+
+14. Interest Score
+
+Function:
+
+calculate_interest_score(place, interests)
+
+User ke interests:
+
+heritage, food, culture
+
+ko split kiya jata hai.
+
+user_interests = [
+    interest.strip().lower()
+    for interest in interests.split(",")
+]
+
+Place ke tags bhi split hote hain:
+
+place_tags = [
+    tag.strip().lower()
+    for tag in place["tags"].split(",")
+]
+
+Phir matching interests count hote hain.
+
+Example:
+
+User:
+heritage, food, culture
+
+Place:
+heritage, history, photography
+
+Matching:
+
+heritage = match
+food = no
+culture = no
+
+Therefore:
+
+Interest Score = 1/3
+15. Budget Score
+
+Function:
+
+calculate_budget_score(place, budget)
+
+Ye check karta hai ki place ka estimated cost user ke budget ke comparison mein kaisa hai.
+
+Logic:
+
+Low cost
+   ↓
+High score
+
+High cost
+   ↓
+Lower score
+
+Example:
+
+Budget = ₹8000
+Place Cost = ₹50
+
+To place ko high budget-fit score milega.
+
+16. Rating Score
+
+Function:
+
+calculate_rating_score(place)
+
+Rating ko 0–1 scale mein convert kiya:
+
+return place["rating"] / 5
+
+Example:
+
+Rating = 4.5
+
+4.5 / 5 = 0.90
+
+Therefore:
+
+Rating Score = 0.90
+17. Final AI Score
+
+Final score:
+
+final_score = (
+    interest_score * 0.50 +
+    budget_score * 0.30 +
+    rating_score * 0.20
+)
+Weightage
+Factor	Weight
+Interest	50%
+Budget	30%
+Rating	20%
+Why these weights?
+
+Day 1 MVP mein humne user preference ko highest priority di.
+
+Interest → 50%
+Budget   → 30%
+Rating   → 20%
+
+Isliye recommendation user-centric hai.
+
+18. Places Ranking
+
+Function:
+
+recommend_places(
+    places,
+    interests,
+    budget
+)
+
+Har place ka score calculate hota hai:
+
+place["score"] = score
+
+Then places descending order mein sort hote hain:
+
+recommended_places.sort(
+    key=lambda place: place["score"],
+    reverse=True
+)
+
+Meaning:
+
+Highest AI score
+      ↓
+      1st
+
+Second highest
+      ↓
+      2nd
+
+...
+19. AI Match Score
+
+Frontend par user ko score percentage ke form mein dikhaya:
+
+(place.score * 100).toFixed(0)
+
+Example:
+
+AI Match Score: 92%
+
+Ye demo ke liye bahut useful feature hai because judges ko dikhega ki recommendation random nahi hai, balki scoring logic ke basis par ho rahi hai.
+
+20. Itinerary Generation
+
+Day 1 mein humne recommendation ke baad day-wise itinerary generate karna bhi implement kiya.
+
+Function:
+
+generate_itinerary(
+    recommended_places,
+    duration
+)
+
+Default daily sightseeing time:
+
+daily_hours = 8
+
+Matlab system ek din mein maximum approximately 8 sightseeing hours consider karta hai.
+
+21. Itinerary Logic
+
+Example:
+
+Victoria Memorial → 2.5 hours
+Indian Museum    → 2.5 hours
+Eco Park         → 3 hours
+
+Total:
+
+2.5 + 2.5 + 3 = 8 hours
+
+Therefore ye Day 1 mein fit ho sakta hai.
+
+System:
+
+Day 1
+ ├── Victoria Memorial
+ ├── Indian Museum
+ └── Eco Park
+
+jaisa itinerary bana sakta hai.
+
+22. Frontend → Backend → Database → AI Flow
+
+Day 1 ke end mein complete basic flow:
+
+                USER
+                  │
+                  ▼
+          HTML FORM
+                  │
+                  ▼
+          JavaScript
+                  │
+                  │ POST /api/plan
+                  ▼
+          FLASK BACKEND
+                  │
+                  ▼
+            SQLite DB
+                  │
+                  ▼
+          Tourist Places
+                  │
+                  ▼
+       Recommendation Engine
+                  │
+                  ▼
+          AI Match Scores
+                  │
+                  ▼
+        Itinerary Generator
+                  │
+                  ▼
+             JSON Response
+                  │
+                  ▼
+           JavaScript
+                  │
+                  ▼
+             WEB PAGE
+
+🔥 Ye Day 1 ka sabse important architecture hai.
+
+23. Project Files
+
+Day 1 ke end par structure:
+
+TravelBytes-AI/
+│
+├── app.py
+├── recommendation.py
+├── database.py
+├── travelbytes.db
+├── requirements.txt
+│
+├── templates/
+│   └── index.html
+│
+├── static/
+│   ├── style.css
+│   └── app.js
+│
+├── docs/
+│
+└── venv/
+24. Har File ka Role
+app.py
+
+Main Flask application.
+
+Responsible for:
+
+Flask server
+Routes
+API
+User request handling
+Recommendation engine ko call karna
+Response return karna
+database.py
+
+Database layer.
+
+Responsible for:
+
+SQLite connection
+Database initialization
+Tables
+Tourism data
+Places fetch karna
+recommendation.py
+
+AI/recommendation logic.
+
+Responsible for:
+
+Interest score
+Budget score
+Rating score
+Final score
+Ranking
+Itinerary generation
+templates/index.html
+
+Frontend structure.
+
+Responsible for:
+
+Form
+Inputs
+Buttons
+Result container
+static/style.css
+
+Frontend design.
+
+Responsible for:
+
+Styling
+Cards
+Layout
+Spacing
+Visual appearance
+static/app.js
+
+Frontend logic.
+
+Responsible for:
+
+Form submission
+API request
+JSON response receive karna
+Recommendations display karna
+Itinerary display karna
+Error handling
+travelbytes.db
+
+Actual SQLite database.
+
+Ismein tourism data stored hai.
+
+requirements.txt
+
+Project ki Python dependencies record karta hai.
+
+Currently main dependency:
+
+Flask
+
+Future mein APIs ke according aur packages add honge.
+
+25. Virtual Environment
+
+Humne Python virtual environment banaya:
+
+python -m venv venv
+
+Activate:
+
+venv\Scripts\activate
+Virtual environment kyun?
+
+Project ke Python packages ko system Python se separate rakhne ke liye.
+
+Benefits:
+
+Dependency conflicts kam
+Project reproducibility
+Clean development environment
+26. Flask Installation
+
+Flask install kiya:
+
+python -m pip install Flask
+
+python -m pip use karna useful raha because direct pip.exe execution par Windows Application Control issue aa raha tha.
+
+27. Application Run Karna
+
+Server run:
+
+python app.py
+
+Local URL:
+
+http://127.0.0.1:5000
+
+Ye development server hai.
+
+28. Day 1 mein kya achieve hua?
+Before Day 1
+Idea
+ ↓
+TravelBytes AI concept
+After Day 1
+Working Web Application
+        ↓
+User Input
+        ↓
+Flask API
+        ↓
+SQLite Tourism Database
+        ↓
+Recommendation Engine
+        ↓
+AI Match Score
+        ↓
+Day-wise Itinerary
+
+🔥 Matlab ab TravelBytes AI sirf idea nahi raha — working prototype ban gaya hai.
+
+29. Day 1 mein kya AI hai?
+
+Important point for SIH presentation:
+
+Humne Day 1 mein unnecessarily heavy ML model nahi lagaya.
+
+Instead humne explainable recommendation intelligence implement ki:
+
+User Interests
+      +
+Budget
+      +
+Place Rating
+      ↓
+Weighted Scoring
+      ↓
+Recommendation Ranking
+
+Ye approach:
+
+explainable hai
+fast hai
+lightweight hai
+easy to debug hai
+hackathon MVP ke liye practical hai
+
+Baad mein weather, distance, time aur real-time conditions ko scoring mein add kar sakte hain.
+
+30. Day 1 ki Limitations
+
+Day 1 ke system mein abhi:
+
+❌ Hotels nahi hain
+❌ Restaurants nahi hain
+❌ Local guides nahi hain
+❌ Real-time weather nahi hai
+❌ Real-time traffic nahi hai
+❌ Live place availability nahi hai
+❌ Dynamic re-planning nahi hai
+❌ Map/routing integration nahi hai
+❌ User itinerary editing nahi hai
+❌ Multiple cities ka large dataset nahi hai
+
+Ye bugs nahi hain — ye future development tasks hain.
+
+31. Day 2 mein kya improve hoga?
+
+Day 2 ka focus:
+
+Tourism Data Expansion
+
+Add karenge:
+
+Tourist Places
+      +
+Hotels
+      +
+Restaurants
+      +
+Local Experiences
+      +
+Guides
+
+Database architecture ko expand karenge.
+
+Then frontend par:
+
+🏛️ Places
+🏨 Hotels
+🍴 Restaurants
+🎭 Experiences
+
+recommendations dikhayenge.
+
+32. Day 1 Important Concepts Learned
+
+Day 1 mein tumne practically ye concepts use kiye:
+
+Python
+Functions
+Lists
+Dictionaries
+Loops
+Conditional statements
+Sorting
+JSON handling
+Flask
+Flask application
+Routes
+GET/POST
+request
+jsonify
+render_template
+Database
+SQLite
+SQL
+Tables
+CREATE TABLE
+SELECT
+INSERT
+Database connection
+Frontend
+HTML forms
+CSS
+JavaScript DOM
+Event listeners
+fetch()
+JSON
+Async/Await
+AI/Logic
+Feature scoring
+Weighted scoring
+Ranking
+Recommendation
+Itinerary generation
+33. Day 1 Git Commit
+
+Agar GitHub use kar rahe ho, Day 1 ke end par commit:
+
+git add .
+git commit -m "Day 1: Flask backend, SQLite database and AI itinerary foundation"
+
+Aur GitHub par push:
+
+git push
+34. Day 1 Final Status
+╔════════════════════════════════════╗
+║     TRAVELBYTES AI — DAY 1        ║
+╠════════════════════════════════════╣
+║ Python Environment        ✅       ║
+║ Flask Backend             ✅       ║
+║ HTML Frontend             ✅       ║
+║ CSS Styling               ✅       ║
+║ JavaScript API Connection ✅       ║
+║ SQLite Database           ✅       ║
+║ Tourism Data              ✅       ║
+║ Recommendation Engine     ✅       ║
+║ AI Match Score            ✅       ║
+║ Itinerary Generator       ✅       ║
+╠════════════════════════════════════╣
+║ DAY 1 STATUS: COMPLETE 🔥         ║
+╚════════════════════════════════════╝

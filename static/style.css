@@ -2281,3 +2281,90 @@ body.feedback-open {
     }
 
 }
+
+/* =========================================================
+   EMERGENCY SERVICES — MOBILE FIX
+========================================================= */
+
+@media (max-width: 650px) {
+
+    .emergency-section {
+        padding: 17px;
+    }
+
+    .emergency-header {
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .emergency-header h2 {
+        font-size: 20px;
+        line-height: 1.3;
+        overflow-wrap: anywhere;
+    }
+
+    .emergency-header p {
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    .emergency-live-badge {
+        align-self: flex-start;
+    }
+
+    .emergency-fallback {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 14px;
+    }
+
+    .emergency-fallback > div {
+        min-width: 0;
+    }
+
+    .emergency-fallback strong,
+    .emergency-fallback span {
+        overflow-wrap: anywhere;
+    }
+
+    .emergency-112-btn {
+        width: 100%;
+    }
+
+    .emergency-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .emergency-card {
+        align-items: flex-start;
+        min-width: 0;
+        padding: 14px;
+    }
+
+    .emergency-card-content {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .emergency-card h4,
+    .emergency-meta,
+    .emergency-address {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .emergency-actions {
+        align-items: stretch;
+    }
+
+    .emergency-call-btn,
+    .emergency-link-btn,
+    .emergency-no-phone {
+        max-width: 100%;
+        overflow-wrap: anywhere;
+    }
+
+}

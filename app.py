@@ -1,3 +1,6 @@
+# import os
+# from pymongo import MongoClient
+
 from flask import Flask, render_template, jsonify, request
 
 import math
@@ -6,7 +9,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from database import init_db, get_businesses
+from database import (
+    init_db,
+    get_businesses,
+    get_connection
+)
 
 from recommendation import (
     recommend_places,
@@ -36,6 +43,36 @@ from services.hotels_api import (
     get_hotel_content,
     search_hotel_destination
 )
+
+import os
+from pymongo import MongoClient
+
+# ==========================================
+# MONGODB CONNECTION
+# ==========================================
+
+MONGODB_URI = os.getenv("MONGODB_URI")
+
+mongo_client = None
+mongo_db = None
+feedback_collection = None
+
+if MONGODB_URI:
+    mongo_client = MongoClient(
+        MONGODB_URI,
+        serverSelectionTimeoutMS=5000
+    )
+
+    mongo_client.admin.command("ping")
+
+    mongo_db = mongo_client["travelbytes_ai"]
+
+    feedback_collection = mongo_db["feedback"]
+
+    print("MongoDB connected successfully.")
+else:
+    print("MONGODB_URI is not configured.")
+
 
 
 # ========================================
@@ -178,6 +215,111 @@ def health():
             "hotelbeds": True
         }
     })
+    
+    
+# ========================================
+# CLIENT FEEDBACK
+# ========================================
+
+@app.route(
+    "/api/feedback",
+    methods=["POST"]
+)
+def submit_feedback():
+
+    try:
+
+        data = request.get_json() or {}
+
+        name = (
+            data.get("name") or ""
+        ).strip()
+
+        email = (
+            data.get("email") or ""
+        ).strip()
+
+        message = (
+            data.get("message") or ""
+        ).strip()
+
+        destination = (
+            data.get("destination") or ""
+        ).strip()
+
+        try:
+            rating = int(
+                data.get(
+                    "rating",
+                    0
+                )
+            )
+        except (TypeError, ValueError):
+            rating = 0
+
+        # -------------------------------
+        # VALIDATION
+        # -------------------------------
+
+        if rating < 1 or rating > 5:
+
+            return jsonify({
+                "status": "error",
+                "message": "Please select a rating from 1 to 5."
+            }), 400
+
+        if not message:
+
+            return jsonify({
+                "status": "error",
+                "message": "Please enter your feedback."
+            }), 400
+
+                # -------------------------------
+        # STORE FEEDBACK IN MONGODB
+        # -------------------------------
+
+        if feedback_collection is None:
+            return jsonify({
+                "status": "error",
+                "message": "Feedback database is not configured."
+            }), 503
+
+        feedback_document = {
+            "name": name or None,
+            "email": email or None,
+            "rating": rating,
+            "message": message,
+            "destination": destination or None
+        }
+
+        result = feedback_collection.insert_one(
+            feedback_document
+        )
+
+        return jsonify({
+            "status": "success",
+            "message": "Thank you for your feedback!",
+            "feedback_id": str(result.inserted_id)
+        })
+
+        # return jsonify({
+        #     "status": "success",
+        #     "message": "Thank you for your feedback!",
+        #     "feedback_id": feedback_id
+        # })
+
+    except Exception as error:
+
+        print(
+            "Feedback error:",
+            error
+        )
+
+        return jsonify({
+            "status": "error",
+            "message": "Unable to save feedback."
+        }), 500
 
 
 # ========================================

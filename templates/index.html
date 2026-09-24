@@ -538,21 +538,181 @@
      FOOTER
 ========================================================= -->
 
-    <footer>
+    <footer class="travelbytes-footer">
 
-        <strong>
-            TravelBytes AI
-        </strong>
+        <div class="footer-brand">
 
-        <span>
-            AI-powered dynamic tourism ecosystem
-        </span>
+            <strong>
+                TravelBytes AI
+            </strong>
 
-        <span>
-            SIH 2026 Prototype
-        </span>
+            <span>
+                AI-powered dynamic tourism ecosystem
+            </span>
+
+            <small>
+                Plan • Adapt • Connect
+            </small>
+
+        </div>
+
+
+        <div class="footer-feedback">
+
+            <div>
+
+                <span class="footer-feedback-label">
+                    CLIENT FEEDBACK
+                </span>
+
+                <h3>
+                    Help us improve your journey
+                </h3>
+
+                <p>
+                    Share your experience with TravelBytes AI.
+                </p>
+
+            </div>
+
+            <button type="button" id="openFeedbackBtn" class="footer-feedback-btn">
+                💬 Share Feedback
+            </button>
+
+        </div>
+
+
+        <div class="footer-bottom">
+
+            <span>
+                © 2026 TravelBytes AI
+            </span>
+
+            <span>
+                SIH 2026 • SINGHBYTES
+            </span>
+
+            <span>
+                Live Tourism Intelligence
+            </span>
+
+        </div>
 
     </footer>
+
+
+    <!-- =========================================================
+     FEEDBACK MODAL
+========================================================= -->
+
+    <div id="feedbackModal" class="feedback-modal" aria-hidden="true">
+
+        <div class="feedback-modal-overlay"></div>
+
+        <div class="feedback-modal-card" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
+
+            <button type="button" id="closeFeedbackBtn" class="feedback-close-btn" aria-label="Close feedback">
+                ×
+            </button>
+
+
+            <span class="feedback-kicker">
+                TRAVELBYTES AI
+            </span>
+
+            <h2 id="feedbackTitle">
+                Share Your Feedback
+            </h2>
+
+            <p class="feedback-intro">
+                Your feedback helps us improve the
+                TravelBytes AI experience.
+            </p>
+
+
+            <form id="feedbackForm">
+
+                <div class="feedback-field">
+
+                    <label for="feedbackName">
+                        Name
+                    </label>
+
+                    <input type="text" id="feedbackName" placeholder="Your name" maxlength="80">
+
+                </div>
+
+
+                <div class="feedback-field">
+
+                    <label for="feedbackEmail">
+                        Email <span>(optional)</span>
+                    </label>
+
+                    <input type="email" id="feedbackEmail" placeholder="your@email.com" maxlength="120">
+
+                </div>
+
+
+                <div class="feedback-field">
+
+                    <label>
+                        How was your experience?
+                    </label>
+
+                    <div class="feedback-rating" id="feedbackRating">
+
+                        <button type="button" data-rating="1" aria-label="1 star">
+                            ★
+                        </button>
+
+                        <button type="button" data-rating="2" aria-label="2 stars">
+                            ★
+                        </button>
+
+                        <button type="button" data-rating="3" aria-label="3 stars">
+                            ★
+                        </button>
+
+                        <button type="button" data-rating="4" aria-label="4 stars">
+                            ★
+                        </button>
+
+                        <button type="button" data-rating="5" aria-label="5 stars">
+                            ★
+                        </button>
+
+                    </div>
+
+                    <input type="hidden" id="feedbackRatingValue" value="0">
+
+                </div>
+
+
+                <div class="feedback-field">
+
+                    <label for="feedbackMessage">
+                        Your feedback
+                    </label>
+
+                    <textarea id="feedbackMessage" rows="5" maxlength="1000"
+                        placeholder="Tell us what you liked or what we can improve..." required></textarea>
+
+                </div>
+
+
+                <div id="feedbackStatus" class="feedback-status"></div>
+
+
+                <button type="submit" id="submitFeedbackBtn" class="feedback-submit-btn">
+                    Send Feedback
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
 
 
 

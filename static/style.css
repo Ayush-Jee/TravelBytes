@@ -1988,3 +1988,296 @@ footer strong {
     cursor: not-allowed;
     opacity: 0.7;
 }
+
+/* =========================================================
+   FOOTER + CLIENT FEEDBACK
+========================================================= */
+
+.travelbytes-footer {
+    margin-top: 50px;
+    padding: 34px 7% 20px;
+    background: #111827;
+    color: #ffffff;
+}
+
+
+.footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+
+.footer-brand strong {
+    font-size: 24px;
+}
+
+
+.footer-brand span {
+    color: #cbd5e1;
+    font-size: 13px;
+}
+
+
+.footer-brand small {
+    margin-top: 4px;
+    color: #60a5fa;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+
+.footer-feedback {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 25px;
+    margin-top: 28px;
+    padding: 22px;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    background: #1e293b;
+}
+
+
+.footer-feedback-label {
+    color: #60a5fa;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+
+.footer-feedback h3 {
+    margin: 6px 0 4px;
+    font-size: 17px;
+}
+
+
+.footer-feedback p {
+    margin: 0;
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+
+.footer-feedback-btn {
+    border: 0;
+    border-radius: 10px;
+    padding: 11px 17px;
+    background: #2563eb;
+    color: #ffffff;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+
+.footer-feedback-btn:hover {
+    background: #1d4ed8;
+}
+
+
+.footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 24px;
+    padding-top: 17px;
+    border-top: 1px solid #334155;
+    color: #64748b;
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   FEEDBACK MODAL
+========================================================= */
+
+.feedback-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;
+}
+
+
+.feedback-modal.active {
+    display: block;
+}
+
+
+.feedback-modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
+}
+
+
+.feedback-modal-card {
+    position: relative;
+    z-index: 1;
+    width: min(500px, calc(100% - 30px));
+    max-height: calc(100vh - 30px);
+    overflow-y: auto;
+    margin: 15px auto;
+    padding: 28px;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.2);
+}
+
+
+.feedback-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 15px;
+    border: 0;
+    background: transparent;
+    color: #64748b;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+
+.feedback-kicker {
+    color: #2563eb;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+
+.feedback-modal-card h2 {
+    margin: 7px 0 5px;
+    color: #172033;
+}
+
+
+.feedback-intro {
+    margin: 0 0 20px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+
+.feedback-field {
+    margin-bottom: 16px;
+}
+
+
+.feedback-field label {
+    display: block;
+    margin-bottom: 6px;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+.feedback-field label span {
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+
+.feedback-field input,
+.feedback-field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #dbe2ea;
+    border-radius: 9px;
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 13px;
+    outline: none;
+}
+
+
+.feedback-field input:focus,
+.feedback-field textarea:focus {
+    border-color: #2563eb;
+}
+
+
+.feedback-rating {
+    display: flex;
+    gap: 5px;
+}
+
+
+.feedback-rating button {
+    border: 0;
+    background: transparent;
+    color: #cbd5e1;
+    font-size: 30px;
+    cursor: pointer;
+    padding: 0 2px;
+}
+
+
+.feedback-rating button.selected,
+.feedback-rating button:hover {
+    color: #f59e0b;
+}
+
+
+.feedback-submit-btn {
+    width: 100%;
+    border: 0;
+    border-radius: 10px;
+    padding: 12px;
+    background: #2563eb;
+    color: #ffffff;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+
+.feedback-submit-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+
+.feedback-status {
+    min-height: 18px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+.feedback-status.success {
+    color: #047857;
+}
+
+
+.feedback-status.error {
+    color: #dc2626;
+}
+
+
+body.feedback-open {
+    overflow: hidden;
+}
+
+
+@media (max-width: 650px) {
+
+    .footer-feedback {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .footer-feedback-btn {
+        width: 100%;
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+    }
+
+}

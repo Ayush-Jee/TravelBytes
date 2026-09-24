@@ -3428,4 +3428,377 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log(
         "TravelBytes AI frontend ready."
     );
+
+// ========================================================
+// CLIENT FEEDBACK
+// ========================================================
+
+const openFeedbackBtn =
+    document.getElementById(
+        "openFeedbackBtn"
+    );
+
+const closeFeedbackBtn =
+    document.getElementById(
+        "closeFeedbackBtn"
+    );
+
+const feedbackModal =
+    document.getElementById(
+        "feedbackModal"
+    );
+
+const feedbackForm =
+    document.getElementById(
+        "feedbackForm"
+    );
+
+const feedbackRating =
+    document.getElementById(
+        "feedbackRating"
+    );
+
+const feedbackRatingValue =
+    document.getElementById(
+        "feedbackRatingValue"
+    );
+
+const feedbackStatus =
+    document.getElementById(
+        "feedbackStatus"
+    );
+
+const submitFeedbackBtn =
+    document.getElementById(
+        "submitFeedbackBtn"
+    );
+
+
+function openFeedbackModal() {
+
+    if (!feedbackModal) {
+        return;
+    }
+
+    feedbackModal.classList.add(
+        "active"
+    );
+
+    feedbackModal.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+    document.body.classList.add(
+        "feedback-open"
+    );
+}
+
+
+function closeFeedbackModal() {
+
+    if (!feedbackModal) {
+        return;
+    }
+
+    feedbackModal.classList.remove(
+        "active"
+    );
+
+    feedbackModal.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+    document.body.classList.remove(
+        "feedback-open"
+    );
+}
+
+
+if (openFeedbackBtn) {
+
+    openFeedbackBtn.addEventListener(
+        "click",
+        openFeedbackModal
+    );
+}
+
+
+if (closeFeedbackBtn) {
+
+    closeFeedbackBtn.addEventListener(
+        "click",
+        closeFeedbackModal
+    );
+}
+
+
+if (feedbackModal) {
+
+    const overlay =
+        feedbackModal.querySelector(
+            ".feedback-modal-overlay"
+        );
+
+    if (overlay) {
+
+        overlay.addEventListener(
+            "click",
+            closeFeedbackModal
+        );
+    }
+}
+
+
+document.addEventListener(
+    "keydown",
+    (event) => {
+
+        if (
+            event.key === "Escape" &&
+            feedbackModal?.classList.contains(
+                "active"
+            )
+        ) {
+
+            closeFeedbackModal();
+        }
+    }
+);
+
+
+if (feedbackRating) {
+
+    feedbackRating.addEventListener(
+        "click",
+        (event) => {
+
+            const button =
+                event.target.closest(
+                    "[data-rating]"
+                );
+
+            if (!button) {
+                return;
+            }
+
+            const rating =
+                Number(
+                    button.dataset.rating
+                );
+
+            feedbackRatingValue.value =
+                String(rating);
+
+
+            feedbackRating
+                .querySelectorAll(
+                    "[data-rating]"
+                )
+                .forEach((star) => {
+
+                    const starRating =
+                        Number(
+                            star.dataset.rating
+                        );
+
+                    star.classList.toggle(
+                        "selected",
+                        starRating <= rating
+                    );
+                });
+        }
+    );
+}
+
+
+if (feedbackForm) {
+
+    feedbackForm.addEventListener(
+        "submit",
+        async (event) => {
+
+            event.preventDefault();
+
+
+            const rating =
+                Number(
+                    feedbackRatingValue?.value ||
+                    0
+                );
+
+            const message =
+                document
+                    .getElementById(
+                        "feedbackMessage"
+                    )
+                    ?.value
+                    .trim() || "";
+
+
+            if (
+                rating < 1 ||
+                rating > 5
+            ) {
+
+                feedbackStatus.textContent =
+                    "Please select a rating.";
+
+                feedbackStatus.className =
+                    "feedback-status error";
+
+                return;
+            }
+
+
+            if (!message) {
+
+                feedbackStatus.textContent =
+                    "Please enter your feedback.";
+
+                feedbackStatus.className =
+                    "feedback-status error";
+
+                return;
+            }
+
+
+            submitFeedbackBtn.disabled =
+                true;
+
+            submitFeedbackBtn.textContent =
+                "Saving Feedback...";
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/feedback",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify({
+
+                                    name:
+                                        document
+                                            .getElementById(
+                                                "feedbackName"
+                                            )
+                                            ?.value
+                                            .trim() || "",
+
+                                    email:
+                                        document
+                                            .getElementById(
+                                                "feedbackEmail"
+                                            )
+                                            ?.value
+                                            .trim() || "",
+
+                                    rating:
+                                        rating,
+
+                                    message:
+                                        message,
+
+                                    destination:
+                                        currentDestination ||
+                                        ""
+                                })
+                        }
+                    );
+
+
+                const data =
+                    await safeJson(
+                        response
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data?.message ||
+                        "Unable to save feedback."
+                    );
+                }
+
+
+                feedbackStatus.textContent =
+                    "✓ Thank you! Your feedback has been saved.";
+
+                feedbackStatus.className =
+                    "feedback-status success";
+
+
+                feedbackForm.reset();
+
+                feedbackRatingValue.value =
+                    "0";
+
+                feedbackRating
+                    .querySelectorAll(
+                        "[data-rating]"
+                    )
+                    .forEach((star) => {
+
+                        star.classList.remove(
+                            "selected"
+                        );
+                    });
+
+
+                submitFeedbackBtn.textContent =
+                    "Feedback Saved";
+
+
+                setTimeout(
+                    () => {
+
+                        closeFeedbackModal();
+
+                        submitFeedbackBtn.disabled =
+                            false;
+
+                        submitFeedbackBtn.textContent =
+                            "Send Feedback";
+
+                    },
+                    1600
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Feedback error:",
+                    error
+                );
+
+                feedbackStatus.textContent =
+                    error.message ||
+                    "Unable to save feedback.";
+
+                feedbackStatus.className =
+                    "feedback-status error";
+
+                submitFeedbackBtn.disabled =
+                    false;
+
+                submitFeedbackBtn.textContent =
+                    "Send Feedback";
+            }
+        }
+    );
+}
+
+
 });

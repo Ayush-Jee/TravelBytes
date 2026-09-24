@@ -49,6 +49,22 @@ def init_db():
             tags TEXT
         )
     """)
+    
+        # ==========================================
+    # CLIENT FEEDBACK TABLE
+    # ==========================================
+
+    connection.execute("""
+        CREATE TABLE IF NOT EXISTS feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            email TEXT,
+            rating INTEGER NOT NULL,
+            message TEXT NOT NULL,
+            destination TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
 
     connection.commit()
 

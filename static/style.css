@@ -1313,6 +1313,274 @@ footer strong {
 
 
 /* =========================================================
+   LIVE EMERGENCY SERVICES
+========================================================= */
+
+.emergency-section {
+    margin-top: 24px;
+    padding: 26px;
+    border: 1px solid #e4e9f2;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(23, 32, 51, 0.05);
+}
+
+
+.emergency-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+
+.emergency-header h2 {
+    margin: 7px 0 5px;
+    color: #172033;
+    font-size: 23px;
+    line-height: 1.2;
+}
+
+
+.emergency-header p {
+    margin: 0;
+    color: #718096;
+    font-size: 13px;
+}
+
+
+.emergency-section .section-eyebrow {
+    display: inline-block;
+    color: #2563eb;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+
+.emergency-live-badge {
+    flex-shrink: 0;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #bbf7d0;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+
+.emergency-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 20px;
+    padding: 15px 17px;
+    border-radius: 13px;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+}
+
+
+.emergency-fallback > div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+
+.emergency-fallback strong {
+    color: #9a3412;
+    font-size: 14px;
+}
+
+
+.emergency-fallback span {
+    color: #9a3412;
+    font-size: 12px;
+}
+
+
+.emergency-112-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 95px;
+    padding: 10px 15px;
+    border-radius: 10px;
+    background: #dc2626;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 13px;
+    transition: 0.18s ease;
+}
+
+
+.emergency-112-btn:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+}
+
+
+.emergency-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+
+.emergency-card {
+    display: flex;
+    gap: 13px;
+    padding: 16px;
+    border: 1px solid #e5eaf2;
+    border-radius: 14px;
+    background: #f8fafc;
+    transition: 0.18s ease;
+}
+
+
+.emergency-card:hover {
+    transform: translateY(-2px);
+    border-color: #cbd5e1;
+    box-shadow: 0 7px 18px rgba(23, 32, 51, 0.07);
+}
+
+
+.emergency-card-icon {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    font-size: 21px;
+}
+
+
+.emergency-card-content {
+    min-width: 0;
+    flex: 1;
+}
+
+
+.emergency-card h4 {
+    margin: 0;
+    color: #172033;
+    font-size: 14px;
+    line-height: 1.35;
+}
+
+
+.emergency-type {
+    display: inline-block;
+    margin-top: 4px;
+    color: #2563eb;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: capitalize;
+}
+
+
+.emergency-meta {
+    margin-top: 8px;
+    color: #64748b;
+    font-size: 12px;
+}
+
+
+.emergency-address {
+    margin-top: 5px;
+    color: #718096;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+
+.emergency-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 11px;
+}
+
+
+.emergency-call-btn,
+.emergency-link-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 800;
+    transition: 0.18s ease;
+}
+
+
+.emergency-call-btn {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+
+.emergency-call-btn:hover {
+    background: #1d4ed8;
+}
+
+
+.emergency-link-btn {
+    background: #ffffff;
+    color: #334155;
+    border: 1px solid #dbe2ea;
+}
+
+
+.emergency-link-btn:hover {
+    border-color: #94a3b8;
+}
+
+
+.emergency-no-phone {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+
+.emergency-source {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #edf0f5;
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+
+.emergency-empty {
+    padding: 25px;
+    text-align: center;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #718096;
+    font-size: 13px;
+}
+
+
+/* =========================================================
    RESPONSIVE — TABLET
 ========================================================= */
 
@@ -1698,4 +1966,25 @@ footer strong {
     color: #687386;
 
     font-size: 11px;
+}
+
+/* ============================================================
+   LIVE SYNC CONTROL
+   ============================================================ */
+
+.sync-control {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 14px 0 20px;
+}
+
+.sync-control .simulate-btn {
+    min-width: 150px;
+    cursor: pointer;
+}
+
+.sync-control .simulate-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
 }

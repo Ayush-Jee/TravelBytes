@@ -29,6 +29,8 @@ from services.places_api import get_tourist_places
 
 from services.ecosystem_api import get_live_ecosystem_places
 
+from services.emergency_api import get_nearby_emergency_services
+
 from services.hotels_api import (
     get_clean_hotel_availability,
     get_hotel_content,
@@ -357,6 +359,123 @@ def weather():
             {}
         )
 
+    })
+    
+    
+# ========================================
+# LIVE EMERGENCY SERVICES
+# ========================================
+
+@app.route("/api/emergency")
+def emergency_services():
+
+    city = request.args.get(
+        "city",
+        ""
+    ).strip()
+
+    if not city:
+
+        return jsonify({
+            "status": "error",
+            "message": "City is required."
+        }), 400
+
+    # ------------------------------------
+    # GET DESTINATION COORDINATES
+    # ------------------------------------
+
+    coordinates = get_coordinates(city)
+
+    if not coordinates:
+
+        return jsonify({
+            "status": "error",
+            "message": (
+                f"Could not find coordinates "
+                f"for {city}."
+            )
+        }), 404
+
+    latitude = coordinates.get(
+        "latitude"
+    )
+
+    longitude = coordinates.get(
+        "longitude"
+    )
+
+    if (
+        latitude is None or
+        longitude is None
+    ):
+
+        return jsonify({
+            "status": "error",
+            "message": (
+                "Destination coordinates "
+                "are unavailable."
+            )
+        }), 404
+
+    # ------------------------------------
+    # GET LIVE EMERGENCY SERVICES
+    # ------------------------------------
+
+    result = get_nearby_emergency_services(
+        latitude,
+        longitude,
+        radius=10000,
+        limit=30
+    )
+
+    if not result.get("success"):
+
+        return jsonify({
+            "status": "error",
+            "message": (
+                "Unable to fetch nearby "
+                "emergency services."
+            ),
+            "error": result.get(
+                "error"
+            )
+        }), 502
+
+    return jsonify({
+
+        "status": "success",
+
+        "city": city,
+
+        "coordinates": coordinates,
+
+        "emergency_number": (
+            result.get(
+                "fallback_police_emergency"
+            )
+            or "112"
+        ),
+
+        "count": result.get(
+            "count",
+            0
+        ),
+
+        "services": result.get(
+            "items",
+            []
+        ),
+
+        "source": result.get(
+            "source",
+            "OpenStreetMap / Overpass"
+        ),
+
+        "live": result.get(
+            "live",
+            True
+        )
     })
 
 

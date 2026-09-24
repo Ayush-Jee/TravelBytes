@@ -1255,5 +1255,24 @@ def replan_itinerary_for_weather(
             total_hours,
             1
         )
+        
+    # --------------------------------
+    # SAFETY FALLBACK
+    # NEVER RETURN AN EMPTY ITINERARY
+    # --------------------------------
+
+    old_place_count = sum(
+        len(day.get("places", []))
+        for day in old_itinerary
+    )
+
+    new_place_count = sum(
+        len(day.get("places", []))
+        for day in adapted_itinerary
+    )
+
+    if old_place_count > 0 and new_place_count == 0:
+
+        return old_itinerary
 
     return adapted_itinerary

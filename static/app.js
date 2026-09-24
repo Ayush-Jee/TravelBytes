@@ -38,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let currentDestination = "";
     let currentWeather = null;
+    let lastSyncedWeather = null;
 
     let ecosystemItems = [];
     let currentEcosystemCategory = "all";
@@ -109,15 +110,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (result) {
                 result.innerHTML = `
-                    <div class="loading-box">
-                        <div class="loading-spinner"></div>
-                        <h3>🤖 TravelBytes AI is planning your trip...</h3>
-                        <p>
-                            Fetching live places, weather, routes
-                            and tourism information.
-                        </p>
-                    </div>
-                `;
+                        <div class="loading-box">
+                            <div class="loading-spinner"></div>
+                            <h3>🤖 TravelBytes AI is planning your trip...</h3>
+                            <p>
+                                Fetching live places, weather, routes
+                                and tourism information.
+                            </p>
+                        </div>
+                    `;
             }
 
             try {
@@ -186,25 +187,36 @@ document.addEventListener("DOMContentLoaded", () => {
         currentWeather =
             data.weather || null;
 
+        lastSyncedWeather =
+            deepClone(currentWeather);
+
         if (result) {
             result.innerHTML = "";
         }
 
         renderPlanSummary(data);
         renderWeather(data.weather);
+
+        // AI DYNAMIC ITINERARY FIRST
+        renderItinerary(currentItinerary);
+
+        // AI RECOMMENDATION SECOND
         renderRecommendedPlaces(
             data.recommended_places ||
             data.recommendations ||
             data.places ||
             []
         );
-        renderItinerary(currentItinerary);
 
         if (data.weather) {
             updateWeatherStatus(data.weather);
         }
 
         loadEcosystem(currentDestination, "all");
+
+        loadEmergencyServices(
+            currentDestination
+        );
     }
 
     // --------------------------------------------------------
@@ -235,25 +247,25 @@ document.addEventListener("DOMContentLoaded", () => {
         summary.className = "destination-summary";
 
         summary.innerHTML = `
-            <div class="summary-main">
-                <span class="summary-icon">📍</span>
+                <div class="summary-main">
+                    <span class="summary-icon">📍</span>
 
-                <div>
-                    <h2>${escapeHtml(destination)}</h2>
+                    <div>
+                        <h2>${escapeHtml(destination)}</h2>
 
-                    <p>
-                        ${escapeHtml(String(duration))}
-                        day${Number(duration) === 1 ? "" : "s"}
-                        ${budget !== "-" ? ` • ₹${escapeHtml(String(budget))} budget` : ""}
-                    </p>
+                        <p>
+                            ${escapeHtml(String(duration))}
+                            day${Number(duration) === 1 ? "" : "s"}
+                            ${budget !== "-" ? ` • ₹${escapeHtml(String(budget))} budget` : ""}
+                        </p>
+                    </div>
                 </div>
-            </div>
 
-            <div class="summary-badge">
-                <span>●</span>
-                AI Plan Ready
-            </div>
-        `;
+                <div class="summary-badge">
+                    <span>●</span>
+                    AI Plan Ready
+                </div>
+            `;
 
         result.appendChild(summary);
     }
@@ -305,63 +317,63 @@ document.addEventListener("DOMContentLoaded", () => {
         weatherCard.className = "weather-card";
 
         weatherCard.innerHTML = `
-        <div class="weather-card-icon">
-            ${getWeatherEmoji(description)}
-        </div>
+            <div class="weather-card-icon">
+                ${getWeatherEmoji(description)}
+            </div>
 
-        <div class="weather-card-content">
+            <div class="weather-card-content">
 
-            <span class="weather-label">
-                LIVE WEATHER
-            </span>
+                <span class="weather-label">
+                    LIVE WEATHER
+                </span>
 
-            <strong>
-                ${temperature !== null
+                <strong>
+                    ${temperature !== null
                 ? `${temperature}°C`
                 : "Unavailable"
             }
-            </strong>
+                </strong>
 
-            <p>
-                ${escapeHtml(description)}
-            </p>
+                <p>
+                    ${escapeHtml(description)}
+                </p>
 
-            ${windSpeed !== null
+                ${windSpeed !== null
                 ? `
-                        <small>
-                            💨 Wind ${escapeHtml(
+                            <small>
+                                💨 Wind ${escapeHtml(
                     String(windSpeed)
                 )} km/h
-                        </small>
+                            </small>
+                        `
+                : ""
+            }
+
+            </div>
+
+            ${daily
+                ? `
+                        <div class="weather-extra">
+
+                            <span>Forecast</span>
+
+                            <strong>
+                                ${getRainProbability(daily)}%
+                            </strong>
+
+                            <small>
+                                rain probability
+                            </small>
+
+                        </div>
                     `
                 : ""
             }
 
-        </div>
-
-        ${daily
-                ? `
-                    <div class="weather-extra">
-
-                        <span>Forecast</span>
-
-                        <strong>
-                            ${getRainProbability(daily)}%
-                        </strong>
-
-                        <small>
-                            rain probability
-                        </small>
-
-                    </div>
-                `
-                : ""
-            }
-
-        <div class="weather-live-badge">
-            ● LIVE
-        </div>
-    `;
+            <div class="weather-live-badge">
+                ● LIVE
+            </div>
+        `;
 
         result.appendChild(weatherCard);
     }
@@ -524,108 +536,108 @@ document.addEventListener("DOMContentLoaded", () => {
                     "";
 
                 return `
-                    <article class="place-card">
+                        <article class="place-card">
 
-                        <div class="place-card-top">
+                            <div class="place-card-top">
 
-                            <div class="place-icon">
-                                ${getCategoryEmoji(place.category)}
-                            </div>
+                                <div class="place-icon">
+                                    ${getCategoryEmoji(place.category)}
+                                </div>
 
-                            ${rating !== null
+                                ${rating !== null
                         ? `
-                                    <span class="place-rating">
-                                        ⭐ ${escapeHtml(String(rating))}
-                                    </span>
-                                    `
+                                        <span class="place-rating">
+                                            ⭐ ${escapeHtml(String(rating))}
+                                        </span>
+                                        `
                         : ""
                     }
 
-                        </div>
+                            </div>
 
-                        <h3>
-                            ${escapeHtml(
+                            <h3>
+                                ${escapeHtml(
                         place.name ||
                         "Tourist Attraction"
                     )}
-                        </h3>
+                            </h3>
 
-                        <p class="place-category">
-                            ${escapeHtml(
+                            <p class="place-category">
+                                ${escapeHtml(
                         formatCategory(
                             place.category ||
                             "Tourism"
                         )
                     )}
-                        </p>
+                            </p>
 
-                        <div class="place-meta">
+                            <div class="place-meta">
 
-                            ${distance !== null
+                                ${distance !== null
                         ? `
-                                    <span>
-                                        📍
-                                        ${Number(distance).toFixed(1)}
-                                        km
-                                    </span>
-                                    `
+                                        <span>
+                                            📍
+                                            ${Number(distance).toFixed(1)}
+                                            km
+                                        </span>
+                                        `
                         : ""
                     }
 
-                            ${cost !== null
+                                ${cost !== null
                         ? `
-                                    <span>
-                                        💰 ₹${escapeHtml(String(cost))}
-                                    </span>
-                                    `
+                                        <span>
+                                            💰 ₹${escapeHtml(String(cost))}
+                                        </span>
+                                        `
                         : ""
                     }
 
-                            ${place.duration
+                                ${place.duration
                         ? `
-                                    <span>
-                                        ⏱️
-                                        ${escapeHtml(
+                                        <span>
+                                            ⏱️
+                                            ${escapeHtml(
                             String(place.duration)
                         )}h
-                                    </span>
+                                        </span>
+                                        `
+                        : ""
+                    }
+
+                            </div>
+
+                            ${reason
+                        ? `
+                                    <div class="recommendation-reason">
+                                        🤖 ${escapeHtml(reason)}
+                                    </div>
                                     `
                         : ""
                     }
 
-                        </div>
-
-                        ${reason
-                        ? `
-                                <div class="recommendation-reason">
-                                    🤖 ${escapeHtml(reason)}
-                                </div>
-                                `
-                        : ""
-                    }
-
-                    </article>
-                `;
+                        </article>
+                    `;
             })
             .join("");
 
         section.innerHTML = `
-            <div class="section-heading">
-                <div>
-                    <span class="section-kicker">
-                        AI RECOMMENDATIONS
-                    </span>
+                <div class="section-heading">
+                    <div>
+                        <span class="section-kicker">
+                            AI RECOMMENDATIONS
+                        </span>
 
-                    <h2>
-                        Places selected for you
-                    </h2>
+                        <h2>
+                            Places selected for you
+                        </h2>
+                    </div>
                 </div>
-            </div>
 
-            <div class="places-grid">
-                ${cards}
-            </div>
-        `;
+                <div class="places-grid">
+                    ${cards}
+                </div>
+            `;
 
         result.appendChild(section);
     }
@@ -691,35 +703,35 @@ document.addEventListener("DOMContentLoaded", () => {
             "itinerary-section";
 
         section.innerHTML = `
-            <div class="section-heading itinerary-heading">
+                <div class="section-heading itinerary-heading">
 
-                <div>
-                    <span class="section-kicker">
-                        AI DYNAMIC ITINERARY
-                    </span>
+                    <div>
+                        <span class="section-kicker">
+                            AI DYNAMIC ITINERARY
+                        </span>
 
-                    <h2>
-                        Your adaptive travel plan
-                    </h2>
+                        <h2>
+                            Your adaptive travel plan
+                        </h2>
 
-                    <p>
-                        Edit, remove, add or reorder activities.
-                        TravelBytes AI recalculates the plan.
-                    </p>
+                        <p>
+                            Edit, remove, add or reorder activities.
+                            TravelBytes AI recalculates the plan.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="secondary-action"
+                        id="addItineraryBtn"
+                    >
+                        + Add Activity
+                    </button>
+
                 </div>
 
-                <button
-                    type="button"
-                    class="secondary-action"
-                    id="addItineraryBtn"
-                >
-                    + Add Activity
-                </button>
-
-            </div>
-
-            <div id="editableItinerary"></div>
-        `;
+                <div id="editableItinerary"></div>
+            `;
 
         result.appendChild(section);
 
@@ -755,14 +767,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!itinerary.length) {
             container.innerHTML = `
-                <div class="empty-itinerary">
-                    <div>🗺️</div>
-                    <h3>No itinerary generated</h3>
-                    <p>
-                        Try another destination or duration.
-                    </p>
-                </div>
-            `;
+                    <div class="empty-itinerary">
+                        <div>🗺️</div>
+                        <h3>No itinerary generated</h3>
+                        <p>
+                            Try another destination or duration.
+                        </p>
+                    </div>
+                `;
             return;
         }
 
@@ -776,36 +788,36 @@ document.addEventListener("DOMContentLoaded", () => {
                             : [];
 
                     return `
-                        <div
-                            class="day-card"
-                            data-day-index="${dayIndex}"
-                        >
+                            <div
+                                class="day-card"
+                                data-day-index="${dayIndex}"
+                            >
 
-                            <div class="day-card-header">
+                                <div class="day-card-header">
 
-                                <div>
-                                    <span class="day-number">
-                                        DAY ${dayData.day || dayIndex + 1}
-                                    </span>
+                                    <div>
+                                        <span class="day-number">
+                                            DAY ${dayData.day || dayIndex + 1}
+                                        </span>
 
-                                    <h3>
-                                        ${places.length
+                                        <h3>
+                                            ${places.length
                             ? `${places.length} activities`
                             : "Flexible day"}
-                                    </h3>
-                                </div>
+                                        </h3>
+                                    </div>
 
-                                <div class="day-hours">
-                                    ${Number(
+                                    <div class="day-hours">
+                                        ${Number(
                                 dayData.total_hours || 0
                             ).toFixed(1)}h / 8h
+                                    </div>
+
                                 </div>
 
-                            </div>
+                                <div class="day-activities">
 
-                            <div class="day-activities">
-
-                                ${places.length
+                                    ${places.length
                             ? places.map(
                                 (
                                     place,
@@ -818,16 +830,16 @@ document.addEventListener("DOMContentLoaded", () => {
                                     )
                             ).join("")
                             : `
-                                        <div class="empty-day">
-                                            No activities yet.
-                                        </div>
-                                        `
+                                            <div class="empty-day">
+                                                No activities yet.
+                                            </div>
+                                            `
                         }
 
-                            </div>
+                                </div>
 
-                        </div>
-                    `;
+                            </div>
+                        `;
                 }
             ).join("");
 
@@ -852,125 +864,125 @@ document.addEventListener("DOMContentLoaded", () => {
             place.weather_affected;
 
         return `
-            <div
-                class="activity-card ${weatherAffected
+                <div
+                    class="activity-card ${weatherAffected
                 ? "weather-affected"
                 : ""
             }"
-                data-day-index="${dayIndex}"
-                data-place-index="${placeIndex}"
-            >
+                    data-day-index="${dayIndex}"
+                    data-place-index="${placeIndex}"
+                >
 
-                <div class="activity-icon">
-                    ${getCategoryEmoji(place.category)}
-                </div>
+                    <div class="activity-icon">
+                        ${getCategoryEmoji(place.category)}
+                    </div>
 
-                <div class="activity-info">
+                    <div class="activity-info">
 
-                    <div class="activity-title-row">
+                        <div class="activity-title-row">
 
-                        <h4>
-                            ${escapeHtml(name)}
-                        </h4>
+                            <h4>
+                                ${escapeHtml(name)}
+                            </h4>
 
-                        ${weatherAffected
+                            ${weatherAffected
                 ? `
-                                <span class="weather-change-badge">
-                                    🌧️ Changed
-                                </span>
-                                `
+                                    <span class="weather-change-badge">
+                                        🌧️ Changed
+                                    </span>
+                                    `
                 : ""
             }
 
-                    </div>
+                        </div>
 
-                    <div class="activity-meta">
+                        <div class="activity-meta">
 
-                        <span>
-                            ⏱️
-                            ${escapeHtml(
+                            <span>
+                                ⏱️
+                                ${escapeHtml(
                 String(duration)
             )}h
-                        </span>
+                            </span>
 
-                        ${place.distance_km !== undefined
+                            ${place.distance_km !== undefined
                 ? `
-                                <span>
-                                    📍
-                                    ${Number(
+                                    <span>
+                                        📍
+                                        ${Number(
                     place.distance_km
                 ).toFixed(1)} km
-                                </span>
+                                    </span>
+                                    `
+                : ""
+            }
+
+                        </div>
+
+                        ${place.recommendation_reason
+                ? `
+                                <p class="activity-reason">
+                                    🤖
+                                    ${escapeHtml(
+                    place.recommendation_reason
+                )}
+                                </p>
+                                `
+                : ""
+            }
+
+                        ${place.weather_adaptation_reason
+                ? `
+                                <p class="adaptation-reason">
+                                    🌦️
+                                    ${escapeHtml(
+                    place.weather_adaptation_reason
+                )}
+                                </p>
                                 `
                 : ""
             }
 
                     </div>
 
-                    ${place.recommendation_reason
-                ? `
-                            <p class="activity-reason">
-                                🤖
-                                ${escapeHtml(
-                    place.recommendation_reason
-                )}
-                            </p>
-                            `
-                : ""
-            }
+                    <div class="activity-actions">
 
-                    ${place.weather_adaptation_reason
-                ? `
-                            <p class="adaptation-reason">
-                                🌦️
-                                ${escapeHtml(
-                    place.weather_adaptation_reason
-                )}
-                            </p>
-                            `
-                : ""
-            }
+                        <button
+                            type="button"
+                            class="icon-btn move-up"
+                            title="Move up"
+                        >
+                            ↑
+                        </button>
 
-                </div>
+                        <button
+                            type="button"
+                            class="icon-btn move-down"
+                            title="Move down"
+                        >
+                            ↓
+                        </button>
 
-                <div class="activity-actions">
+                        <button
+                            type="button"
+                            class="icon-btn edit-item"
+                            title="Edit"
+                        >
+                            ✏️
+                        </button>
 
-                    <button
-                        type="button"
-                        class="icon-btn move-up"
-                        title="Move up"
-                    >
-                        ↑
-                    </button>
+                        <button
+                            type="button"
+                            class="icon-btn delete-item danger"
+                            title="Remove"
+                        >
+                            🗑️
+                        </button>
 
-                    <button
-                        type="button"
-                        class="icon-btn move-down"
-                        title="Move down"
-                    >
-                        ↓
-                    </button>
-
-                    <button
-                        type="button"
-                        class="icon-btn edit-item"
-                        title="Edit"
-                    >
-                        ✏️
-                    </button>
-
-                    <button
-                        type="button"
-                        class="icon-btn delete-item danger"
-                        title="Remove"
-                    >
-                        🗑️
-                    </button>
+                    </div>
 
                 </div>
-
-            </div>
-        `;
+            `;
     }
 
     function attachItineraryEvents(container) {
@@ -1435,6 +1447,62 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    async function checkLiveWeatherCondition() {
+
+        const geocodeResponse = await fetch(
+            `/api/geocode?city=${encodeURIComponent(currentDestination)}`
+        );
+
+        const geocodeData = await safeJson(
+            geocodeResponse
+        );
+
+        if (!geocodeResponse.ok) {
+
+            throw new Error(
+                geocodeData?.message ||
+                "Unable to find destination coordinates."
+            );
+        }
+
+        const location =
+            geocodeData.location || {};
+
+        const latitude =
+            location.latitude;
+
+        const longitude =
+            location.longitude;
+
+        if (
+            latitude === undefined ||
+            longitude === undefined
+        ) {
+
+            throw new Error(
+                "Destination coordinates are unavailable."
+            );
+        }
+
+        const weatherResponse = await fetch(
+            `/api/weather?lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}`
+        );
+
+        const weatherData = await safeJson(
+            weatherResponse
+        );
+
+        if (!weatherResponse.ok) {
+
+            throw new Error(
+                weatherData?.message ||
+                "Unable to fetch live weather."
+            );
+        }
+
+        return weatherData.weather || null;
+    }
+
     // --------------------------------------------------------
     // REPLAN
     // --------------------------------------------------------
@@ -1463,8 +1531,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!currentItinerary.length) {
 
-            showMiniNotice(
-                "There is no itinerary to re-plan."
+            showDynamicAlert(
+                "✓ Travel Plan Checked",
+                "Real-world conditions were checked. No itinerary change was required.",
+                "success"
             );
 
             return;
@@ -1474,9 +1544,11 @@ document.addEventListener("DOMContentLoaded", () => {
             replanDemoBtn;
 
         if (button) {
+
             button.disabled = true;
+
             button.textContent =
-                "🤖 AI Replanning...";
+                "🔄 Syncing Live Conditions...";
         }
 
         previousItinerary =
@@ -1484,17 +1556,107 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
 
+            // ====================================================
+            // STEP 1 — CHECK ACTUAL LIVE WEATHER
+            // ====================================================
+
+            const liveWeather =
+                await checkLiveWeatherCondition();
+
+            if (!liveWeather) {
+
+                throw new Error(
+                    "Live weather data is unavailable."
+                );
+            }
+
+
+            // ====================================================
+            // STEP 2 — COMPARE LAST CHECKED CONDITION
+            // ====================================================
+
+            const oldWeatherCode =
+                currentWeather?.weather_code ??
+                currentWeather?.weathercode ??
+                null;
+
+            const newWeatherCode =
+                liveWeather?.weather_code ??
+                liveWeather?.weathercode ??
+                null;
+
+
+            console.log(
+                "TravelBytes AI Sync:",
+                {
+                    previousWeatherCode:
+                        oldWeatherCode,
+
+                    liveWeatherCode:
+                        newWeatherCode
+                }
+            );
+
+
+            // ====================================================
+            // STEP 3 — SAME CONDITION
+            // DO NOT REPLAN
+            // ====================================================
+
+            if (
+                oldWeatherCode !== null &&
+                newWeatherCode !== null &&
+                oldWeatherCode === newWeatherCode
+            ) {
+
+                currentWeather =
+                    liveWeather;
+
+                lastSyncedWeather =
+                    deepClone(
+                        liveWeather
+                    );
+
+                updateWeatherStatus(
+                    liveWeather
+                );
+
+                refreshItineraryDisplay();
+
+                showDynamicAlert(
+                    "✓ Travel Plan Checked",
+                    "Real-world conditions were checked. No itinerary change was required.",
+                    "success"
+                );
+
+                return;
+            }
+
+
+            // ====================================================
+            // STEP 4 — CONDITION CHANGED
+            // NOW AI REPLANNING IS ALLOWED
+            // ====================================================
+
+            console.log(
+                "TravelBytes AI: Real weather condition changed. Starting AI re-planning."
+            );
+
+
             const response =
                 await fetch(
                     "/api/replan",
                     {
                         method: "POST",
+
                         headers: {
                             "Content-Type":
                                 "application/json"
                         },
+
                         body:
                             JSON.stringify({
+
                                 destination:
                                     currentDestination,
 
@@ -1516,13 +1678,18 @@ document.addEventListener("DOMContentLoaded", () => {
                                         : null,
 
                                 interests:
-                                    updateInterestsInput().join(",")
+                                    updateInterestsInput()
+                                        .join(",")
                             })
                     }
                 );
 
+
             const data =
-                await safeJson(response);
+                await safeJson(
+                    response
+                );
+
 
             if (!response.ok) {
 
@@ -1533,49 +1700,200 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
             }
 
+
+            // ====================================================
+            // STEP 5 — GET NEW ITINERARY
+            // ====================================================
+
             const newItinerary =
                 normalizeItinerary(
+
                     data.itinerary ||
                     data.updated_itinerary ||
                     data.replanned_itinerary ||
                     []
                 );
 
-            if (newItinerary.length) {
+
+            // ====================================================
+            // STEP 6 — COUNT ACTUAL ACTIVITIES
+            // ====================================================
+
+            const oldPlaceCount =
+                previousItinerary.reduce(
+                    (total, day) => {
+
+                        return total +
+                            (
+                                Array.isArray(day.places)
+                                    ? day.places.length
+                                    : 0
+                            );
+
+                    },
+                    0
+                );
+
+
+            const newPlaceCount =
+                newItinerary.reduce(
+                    (total, day) => {
+
+                        return total +
+                            (
+                                Array.isArray(day.places)
+                                    ? day.places.length
+                                    : 0
+                            );
+
+                    },
+                    0
+                );
+
+
+            // ====================================================
+            // STEP 7 — NO SUITABLE REPLACEMENT
+            // KEEP OLD ITINERARY
+            // ====================================================
+
+            if (
+                oldPlaceCount > 0 &&
+                newPlaceCount === 0
+            ) {
+
+                console.warn(
+                    "AI replan returned no activities."
+                );
+
+                currentItinerary =
+                    deepClone(
+                        previousItinerary
+                    );
+
+                currentWeather =
+                    liveWeather;
+
+                lastSyncedWeather =
+                    deepClone(
+                        liveWeather
+                    );
+
+                refreshItineraryDisplay();
+
+                updateWeatherStatus(
+                    liveWeather
+                );
+
+                showDynamicAlert(
+                    "✓ Travel Plan Checked",
+                    "Live conditions changed, but no suitable replacement was found. Your existing itinerary was kept.",
+                    "success"
+                );
+
+                return;
+            }
+
+
+            // ====================================================
+            // STEP 8 — VALID NEW ITINERARY
+            // ====================================================
+
+            if (
+                newPlaceCount > 0
+            ) {
 
                 currentItinerary =
                     newItinerary;
 
+                currentWeather =
+                    data.weather ||
+                    liveWeather;
+
+                lastSyncedWeather =
+                    deepClone(
+                        currentWeather
+                    );
+
                 refreshItineraryDisplay();
+
+                updateWeatherStatus(
+                    currentWeather
+                );
+
+                showAdaptationReport(
+                    previousItinerary,
+                    currentItinerary,
+                    data
+                );
+
+                return;
             }
 
-            showAdaptationReport(
-                previousItinerary,
-                currentItinerary,
-                data
+
+            // ====================================================
+            // STEP 9 — SAFETY FALLBACK
+            // ====================================================
+
+            currentItinerary =
+                deepClone(
+                    previousItinerary
+                );
+
+            currentWeather =
+                liveWeather;
+
+            lastSyncedWeather =
+                deepClone(
+                    liveWeather
+                );
+
+            refreshItineraryDisplay();
+
+            updateWeatherStatus(
+                liveWeather
             );
+
+            showDynamicAlert(
+                "✓ Travel Plan Checked",
+                "Real-world conditions were checked. Your existing itinerary was kept.",
+                "success"
+            );
+
 
         } catch (error) {
 
             console.error(
-                "Replan error:",
+                "Sync / Replan error:",
                 error
             );
 
-            showError(
+            currentItinerary =
+                deepClone(
+                    previousItinerary
+                );
+
+            refreshItineraryDisplay();
+
+            showDynamicAlert(
+                "⚠️ Sync Failed",
                 error.message ||
-                "Unable to replan itinerary."
+                "Unable to check live conditions.",
+                "warning"
             );
+
 
         } finally {
 
             if (button) {
+
                 button.disabled = false;
+
                 button.textContent =
-                    "⚡ Simulate Real-Time Change";
+                    "⚡ Sync";
             }
         }
     }
+
 
     // --------------------------------------------------------
     // ADAPTATION REPORT
@@ -1639,30 +1957,30 @@ document.addEventListener("DOMContentLoaded", () => {
         showDynamicAlert(
             "🤖 AI Adaptation Detected",
             `
-                <p>
-                    ${escapeHtml(weatherText)}
-                </p>
+                    <p>
+                        ${escapeHtml(weatherText)}
+                    </p>
 
-                ${removed.length
+                    ${removed.length
                 ? `
-                        <strong>Removed / Rescheduled</strong>
-                        <ul>
-                            ${removedText}
-                        </ul>
-                        `
+                            <strong>Removed / Rescheduled</strong>
+                            <ul>
+                                ${removedText}
+                            </ul>
+                            `
                 : ""
             }
 
-                ${added.length
+                    ${added.length
                 ? `
-                        <strong>Added Alternatives</strong>
-                        <ul>
-                            ${addedText}
-                        </ul>
-                        `
+                            <strong>Added Alternatives</strong>
+                            <ul>
+                                ${addedText}
+                            </ul>
+                            `
                 : ""
             }
-            `,
+                `,
             "warning",
             true
         );
@@ -1695,6 +2013,439 @@ document.addEventListener("DOMContentLoaded", () => {
                     item.name ||
                     "Activity"
             );
+    }
+
+    // --------------------------------------------------------
+    // LIVE EMERGENCY SERVICES
+    // --------------------------------------------------------
+
+    async function loadEmergencyServices(city) {
+
+        if (!city) {
+            return;
+        }
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/emergency?city=${encodeURIComponent(city)}`
+                );
+
+            const data =
+                await safeJson(response);
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data?.message ||
+                    data?.error ||
+                    `Emergency API error: ${response.status}`
+                );
+            }
+
+            renderEmergencyServices(
+                data
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Emergency services error:",
+                error
+            );
+
+            renderEmergencyError(
+                error.message ||
+                "Unable to load nearby emergency services."
+            );
+        }
+    }
+
+
+    // --------------------------------------------------------
+    // RENDER EMERGENCY SERVICES
+    // --------------------------------------------------------
+
+    function renderEmergencyServices(
+        data
+    ) {
+
+        const oldSection =
+            document.getElementById(
+                "emergencySection"
+            );
+
+        if (oldSection) {
+            oldSection.remove();
+        }
+
+        const services =
+            Array.isArray(data.services)
+                ? data.services
+                : [];
+
+        const section =
+            document.createElement(
+                "section"
+            );
+
+        section.id =
+            "emergencySection";
+
+        section.className =
+            "ecosystem-section emergency-section";
+
+
+        const emergencyNumber =
+            data.emergency_number ||
+            "112";
+
+
+        const serviceCards =
+            services
+                .slice(0, 8)
+                .map((service) => {
+
+                    const category =
+                        String(
+                            service.category ||
+                            "emergency"
+                        ).toLowerCase();
+
+                    const icon =
+                        category === "police"
+                            ? "🚔"
+                            : category === "fire"
+                                ? "🚒"
+                                : category === "hospital"
+                                    ? "🏥"
+                                    : category === "ambulance"
+                                        ? "🚑"
+                                        : "🚨";
+
+
+                    const phone =
+                        service.phone
+                            ? String(
+                                service.phone
+                            )
+                                .split(",")[0]
+                                .trim()
+                            : "";
+
+
+                    const telNumber =
+                        phone.replace(
+                            /[^0-9+]/g,
+                            ""
+                        );
+
+
+                    const callButton =
+                        telNumber
+                            ? `
+                            <a
+                                class="emergency-call-btn"
+                                href="tel:${escapeHtml(telNumber)}"
+                            >
+                                📞 Call
+                            </a>
+                        `
+                            : `
+                            <span class="emergency-no-phone">
+                                Phone unavailable
+                            </span>
+                        `;
+
+
+                    return `
+                    <div class="emergency-card">
+
+                        <div class="emergency-card-icon">
+                            ${icon}
+                        </div>
+
+                        <div class="emergency-card-content">
+
+                            <h4>
+                                ${escapeHtml(
+                        service.name ||
+                        "Emergency Service"
+                    )}
+                            </h4>
+
+                            <span class="emergency-type">
+                                ${escapeHtml(
+                        formatCategory(
+                            category
+                        )
+                    )}
+                            </span>
+
+                            <div class="emergency-meta">
+
+                                ${service.distance_km !== null &&
+                            service.distance_km !== undefined
+                            ? `
+                                            📍 ${Number(
+                                service.distance_km
+                            ).toFixed(2)
+                            } km
+                                        `
+                            : ""
+                        }
+
+                            </div>
+
+                            ${service.address
+                            ? `
+                                        <div class="emergency-address">
+                                            ${escapeHtml(
+                                service.address
+                            )}
+                                        </div>
+                                    `
+                            : ""
+                        }
+
+                            <div class="emergency-actions">
+
+                                ${callButton}
+
+                                ${service.website
+                            ? `
+                                            <a
+                                                class="emergency-link-btn"
+                                                href="${escapeHtml(
+                                service.website
+                            )}"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                🌐 Website
+                                            </a>
+                                        `
+                            : ""
+                        }
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                `;
+                })
+                .join("");
+
+
+        section.innerHTML = `
+
+        <div class="emergency-header">
+
+            <div>
+
+                <span class="section-eyebrow">
+                    SAFETY
+                </span>
+
+                <h2>
+                    🚨 Nearby Emergency Services
+                </h2>
+
+                <p>
+                    Live emergency services near
+                    ${escapeHtml(
+            data.city ||
+            currentDestination
+        )}
+                </p>
+
+            </div>
+
+            <div class="emergency-live-badge">
+                ● LIVE
+            </div>
+
+        </div>
+
+
+        <div class="emergency-fallback">
+
+            <div>
+
+                <strong>
+                    Emergency Helpline
+                </strong>
+
+                <span>
+                    National emergency number
+                </span>
+
+            </div>
+
+            <a
+                class="emergency-112-btn"
+                href="tel:${escapeHtml(
+            emergencyNumber
+        )}"
+            >
+                📞 ${escapeHtml(
+            emergencyNumber
+        )}
+            </a>
+
+        </div>
+
+
+        ${serviceCards
+                ? `
+                    <div class="emergency-grid">
+                        ${serviceCards}
+                    </div>
+                `
+                : `
+                    <div class="emergency-empty">
+                        No nearby emergency services found.
+                    </div>
+                `
+            }
+
+        <div class="emergency-source">
+            Live data source:
+            ${escapeHtml(
+                data.source ||
+                "OpenStreetMap / Overpass"
+            )}
+        </div>
+
+    `;
+
+
+        if (businessSection) {
+
+            businessSection.parentNode.insertBefore(
+                section,
+                businessSection
+            );
+
+        } else {
+
+            const resultContainer =
+                document.getElementById(
+                    "result"
+                );
+
+            if (resultContainer) {
+
+                resultContainer.appendChild(
+                    section
+                );
+            }
+        }
+    }
+
+
+    // --------------------------------------------------------
+    // EMERGENCY ERROR
+    // --------------------------------------------------------
+
+    function renderEmergencyError(
+        message
+    ) {
+
+        const oldSection =
+            document.getElementById(
+                "emergencySection"
+            );
+
+        if (oldSection) {
+            oldSection.remove();
+        }
+
+        const section =
+            document.createElement(
+                "section"
+            );
+
+        section.id =
+            "emergencySection";
+
+        section.className =
+            "ecosystem-section emergency-section";
+
+
+        section.innerHTML = `
+
+        <div class="emergency-header">
+
+            <div>
+
+                <span class="section-eyebrow">
+                    SAFETY
+                </span>
+
+                <h2>
+                    🚨 Emergency Services
+                </h2>
+
+                <p>
+                    Live emergency service data
+                    is temporarily unavailable.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="emergency-fallback">
+
+            <div>
+
+                <strong>
+                    Emergency Helpline
+                </strong>
+
+                <span>
+                    National emergency number
+                </span>
+
+            </div>
+
+            <a
+                class="emergency-112-btn"
+                href="tel:112"
+            >
+                📞 112
+            </a>
+
+        </div>
+
+    `;
+
+
+        if (businessSection) {
+
+            businessSection.parentNode.insertBefore(
+                section,
+                businessSection
+            );
+
+        } else {
+
+            const resultContainer =
+                document.getElementById(
+                    "result"
+                );
+
+            if (resultContainer) {
+
+                resultContainer.appendChild(
+                    section
+                );
+            }
+        }
     }
 
     // --------------------------------------------------------
@@ -2023,27 +2774,27 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!items.length) {
 
             businessResult.innerHTML = `
-                <div class="ecosystem-empty">
+                    <div class="ecosystem-empty">
 
-                    <div class="empty-icon">
-                        🌍
-                    </div>
+                        <div class="empty-icon">
+                            🌍
+                        </div>
 
-                    <h3>
-                        No live ${escapeHtml(
+                        <h3>
+                            No live ${escapeHtml(
                 category === "all"
                     ? "tourism services"
                     : formatCategory(category)
             )} found
-                    </h3>
+                        </h3>
 
-                    <p>
-                        Try another destination or
-                        explore another category.
-                    </p>
+                        <p>
+                            Try another destination or
+                            explore another category.
+                        </p>
 
-                </div>
-            `;
+                    </div>
+                `;
 
             return;
         }
@@ -2096,31 +2847,31 @@ document.addEventListener("DOMContentLoaded", () => {
             );
 
         return `
-            <article class="business-card ecosystem-card">
+                <article class="business-card ecosystem-card">
 
-                <div class="business-card-top">
+                    <div class="business-card-top">
 
-                    <div class="business-icon">
-                        ${getEcosystemEmoji(
+                        <div class="business-icon">
+                            ${getEcosystemEmoji(
             itemCategory
         )}
+                        </div>
+
+                        <span class="live-data-badge">
+                            ● LIVE
+                        </span>
+
                     </div>
 
-                    <span class="live-data-badge">
-                        ● LIVE
-                    </span>
-
-                </div>
-
-                <h3>
-                    ${escapeHtml(
+                    <h3>
+                        ${escapeHtml(
             item.name ||
             "Local Tourism Provider"
         )}
-                </h3>
+                    </h3>
 
-                <p class="business-type">
-                    ${escapeHtml(
+                    <p class="business-type">
+                        ${escapeHtml(
             formatCategory(
                 item.subcategory ||
                 item.type ||
@@ -2128,96 +2879,96 @@ document.addEventListener("DOMContentLoaded", () => {
                 category
             )
         )}
-                </p>
+                    </p>
 
-                ${item.location
+                    ${item.location
                 ? `
-                        <p class="business-location">
-                            📍
-                            ${escapeHtml(
+                            <p class="business-location">
+                                📍
+                                ${escapeHtml(
                     item.location
                 )}
-                        </p>
-                        `
+                            </p>
+                            `
                 : ""
             }
 
-                <div class="business-meta">
+                    <div class="business-meta">
 
-                    ${rating !== null
+                        ${rating !== null
                 ? `
-                            <span>
-                                ⭐
-                                ${escapeHtml(
+                                <span>
+                                    ⭐
+                                    ${escapeHtml(
                     String(rating)
                 )}
-                            </span>
-                            `
+                                </span>
+                                `
                 : ""
             }
 
-                    ${distance !== null
+                        ${distance !== null
                 ? `
-                            <span>
-                                📍
-                                ${Number(
+                                <span>
+                                    📍
+                                    ${Number(
                     distance
                 ).toFixed(1)} km
-                            </span>
-                            `
+                                </span>
+                                `
                 : ""
             }
 
-                    ${price !== null
+                        ${price !== null
                 ? `
-                            <span>
-                                💰
-                                ${escapeHtml(
+                                <span>
+                                    💰
+                                    ${escapeHtml(
                     String(price)
                 )}
-                            </span>
+                                </span>
+                                `
+                : ""
+            }
+
+                    </div>
+
+                    ${item.opening_hours
+                ? `
+                            <div class="business-hours">
+                                🕐
+                                ${escapeHtml(
+                    item.opening_hours
+                )}
+                            </div>
                             `
                 : ""
             }
 
-                </div>
-
-                ${item.opening_hours
+                    ${item.website
                 ? `
-                        <div class="business-hours">
-                            🕐
-                            ${escapeHtml(
-                    item.opening_hours
-                )}
-                        </div>
-                        `
-                : ""
-            }
-
-                ${item.website
-                ? `
-                        <a
-                            class="business-link"
-                            href="${safeUrl(
+                            <a
+                                class="business-link"
+                                href="${safeUrl(
                     item.website
                 )}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            Visit website →
-                        </a>
-                        `
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                Visit website →
+                            </a>
+                            `
                 : ""
             }
 
-                <div class="data-source">
-                    Data: ${escapeHtml(
+                    <div class="data-source">
+                        Data: ${escapeHtml(
                 String(source)
             )}
-                </div>
+                    </div>
 
-            </article>
-        `;
+                </article>
+            `;
     }
 
     function getEcosystemEmoji(
@@ -2285,20 +3036,20 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         businessResult.innerHTML = `
-            <div class="loading-box ecosystem-loading">
+                <div class="loading-box ecosystem-loading">
 
-                <div class="loading-spinner"></div>
+                    <div class="loading-spinner"></div>
 
-                <h3>
-                    ${escapeHtml(message)}
-                </h3>
+                    <h3>
+                        ${escapeHtml(message)}
+                    </h3>
 
-                <p>
-                    Connecting to live tourism services...
-                </p>
+                    <p>
+                        Connecting to live tourism services...
+                    </p>
 
-            </div>
-        `;
+                </div>
+            `;
     }
 
     function renderEcosystemError(
@@ -2308,25 +3059,25 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!businessResult) return;
 
         businessResult.innerHTML = `
-            <div class="ecosystem-error">
+                <div class="ecosystem-error">
 
-                <div class="empty-icon">
-                    ⚠️
-                </div>
+                    <div class="empty-icon">
+                        ⚠️
+                    </div>
 
-                <h3>
-                    Live data temporarily unavailable
-                </h3>
+                    <h3>
+                        Live data temporarily unavailable
+                    </h3>
 
-                <p>
-                    ${escapeHtml(
+                    <p>
+                        ${escapeHtml(
             message ||
             "Please try again."
         )}
-                </p>
+                    </p>
 
-            </div>
-        `;
+                </div>
+            `;
     }
 
     // --------------------------------------------------------
@@ -2346,36 +3097,36 @@ document.addEventListener("DOMContentLoaded", () => {
             `dynamic-alert ${type}`;
 
         dynamicAlert.innerHTML = `
-            <div class="alert-icon">
-                ${type === "success"
+                <div class="alert-icon">
+                    ${type === "success"
                 ? "✓"
                 : "⚡"
             }
-            </div>
+                </div>
 
-            <div class="alert-content">
+                <div class="alert-content">
 
-                <strong>
-                    ${escapeHtml(title)}
-                </strong>
+                    <strong>
+                        ${escapeHtml(title)}
+                    </strong>
 
-                <div>
-                    ${html
+                    <div>
+                        ${html
                 ? message
                 : escapeHtml(message)
             }
+                    </div>
+
                 </div>
 
-            </div>
-
-            <button
-                type="button"
-                class="alert-close"
-                aria-label="Close"
-            >
-                ×
-            </button>
-        `;
+                <button
+                    type="button"
+                    class="alert-close"
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+            `;
 
         showElement(
             dynamicAlert
@@ -2405,33 +3156,33 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!result) return;
 
         result.innerHTML = `
-            <div class="error-box">
+                <div class="error-box">
 
-                <div class="error-icon">
-                    ⚠️
-                </div>
+                    <div class="error-icon">
+                        ⚠️
+                    </div>
 
-                <h3>
-                    Something went wrong
-                </h3>
+                    <h3>
+                        Something went wrong
+                    </h3>
 
-                <p>
-                    ${escapeHtml(
+                    <p>
+                        ${escapeHtml(
             message ||
             "Please try again."
         )}
-                </p>
+                    </p>
 
-                <button
-                    type="button"
-                    class="secondary-action"
-                    onclick="location.reload()"
-                >
-                    Try Again
-                </button>
+                    <button
+                        type="button"
+                        class="secondary-action"
+                        onclick="location.reload()"
+                    >
+                        Try Again
+                    </button>
 
-            </div>
-        `;
+                </div>
+            `;
     }
 
     // --------------------------------------------------------
@@ -2454,9 +3205,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             generateBtn.innerHTML =
                 `
-                <span class="button-spinner"></span>
-                AI is Planning...
-                `;
+                    <span class="button-spinner"></span>
+                    AI is Planning...
+                    `;
 
         } else {
 

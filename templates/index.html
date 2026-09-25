@@ -8,6 +8,7 @@
     <title>TravelBytes AI</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 
 <body>
@@ -339,33 +340,7 @@
 
 
 
-            <!-- MAP -->
-
-            <div class="map">
-
-                <div class="map-road road1"></div>
-
-                <div class="map-road road2"></div>
-
-
-                <div class="map-pin pin1">
-                    📍
-                </div>
-
-                <div class="map-pin pin2">
-                    📍
-                </div>
-
-                <div class="map-pin pin3">
-                    📍
-                </div>
-
-
-                <div class="map-label" id="mapLabel">
-                    Tourism Zone
-                </div>
-
-            </div>
+            
 
             <!-- LIVE SYNC CONTROL -->
 
@@ -496,6 +471,13 @@
         </section>
 
     </main>
+
+    <!-- REAL TOURISM MAP -->
+            <div id="tourismMap" class="tourism-map" aria-label="Live Tourism Zone Map">
+                <div class="map-loading">
+                    🗺️ Tourism map will appear here
+                </div>
+            </div>
 
 
 
@@ -719,7 +701,7 @@
     <!-- =========================================================
      JAVASCRIPT
 ========================================================= -->
-
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
 
 

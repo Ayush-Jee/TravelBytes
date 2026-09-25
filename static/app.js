@@ -1,3 +1,12 @@
+// =========================================================
+// REAL TOURISM MAP — LEAFLET
+// =========================================================
+
+let tourismMap = null;
+let tourismMapMarkers = [];
+
+
+
 // ============================================================
 // TRAVELBYTES AI - FRONTEND APPLICATION
 // Live Tourism Dashboard
@@ -200,6 +209,12 @@ document.addEventListener("DOMContentLoaded", () => {
         // AI DYNAMIC ITINERARY FIRST
         renderItinerary(currentItinerary);
 
+        initializeTourismMap();
+
+        centerTourismMapOnDestination();
+
+        updateTourismMapFromItinerary(currentItinerary);
+
         // AI RECOMMENDATION SECOND
         renderRecommendedPlaces(
             data.recommended_places ||
@@ -217,6 +232,189 @@ document.addEventListener("DOMContentLoaded", () => {
         loadEmergencyServices(
             currentDestination
         );
+    }
+
+    function initializeTourismMap() {
+        const mapElement = document.getElementById("tourismMap");
+
+        if (!mapElement || typeof L === "undefined") {
+            return;
+        }
+
+        if (tourismMap) {
+            tourismMap.invalidateSize();
+            return;
+        }
+
+        tourismMap = L.map("tourismMap", {
+            zoomControl: true,
+            scrollWheelZoom: true
+        });
+
+        L.tileLayer(
+            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+            {
+                maxZoom: 19,
+                attribution:
+                    "Tiles &copy; Esri"
+            }
+        ).addTo(tourismMap);
+
+        const loadingElement =
+            mapElement.querySelector(".map-loading");
+
+        if (loadingElement) {
+            loadingElement.remove();
+        }
+
+
+    }
+
+    async function centerTourismMapOnDestination() {
+
+        if (!tourismMap || !currentDestination) {
+            return;
+        }
+
+        try {
+
+            const response = await fetch(
+                `/api/geocode?city=${encodeURIComponent(currentDestination)}`
+            );
+
+            const data = await response.json();
+
+            if (!response.ok || !data.location) {
+                console.warn(
+                    "Tourism map geocoding failed:",
+                    data
+                );
+                return;
+            }
+
+            const latitude =
+                Number(data.location.latitude);
+
+            const longitude =
+                Number(data.location.longitude);
+
+            if (
+                !Number.isFinite(latitude) ||
+                !Number.isFinite(longitude)
+            ) {
+                console.warn(
+                    "Invalid tourism map coordinates:",
+                    data.location
+                );
+                return;
+            }
+
+            tourismMap.setView(
+                [latitude, longitude],
+                12
+            );
+
+            tourismMap.invalidateSize();
+
+        } catch (error) {
+
+            console.warn(
+                "Tourism map center error:",
+                error
+            );
+        }
+    }
+
+    function updateTourismMapFromItinerary(itinerary) {
+        if (!tourismMap) {
+            initializeTourismMap();
+        }
+
+        if (!tourismMap) {
+            return;
+        }
+
+        // Remove previous markers
+        tourismMapMarkers.forEach(function (marker) {
+            tourismMap.removeLayer(marker);
+        });
+
+        tourismMapMarkers = [];
+
+        const bounds = [];
+
+        if (!Array.isArray(itinerary)) {
+            return;
+        }
+
+        itinerary.forEach(function (dayData) {
+            const places = Array.isArray(dayData.places)
+                ? dayData.places
+                : [];
+
+            places.forEach(function (place) {
+
+                const latitude = Number(place.latitude);
+                const longitude = Number(place.longitude);
+
+                if (
+                    !Number.isFinite(latitude) ||
+                    !Number.isFinite(longitude)
+                ) {
+                    return;
+                }
+
+                const marker = L.marker([
+                    latitude,
+                    longitude
+                ]).addTo(tourismMap);
+
+                const placeName =
+                    place.name || "Tourist Place";
+
+                const category =
+                    place.category || "Tourism";
+
+                const duration =
+                    place.duration !== undefined &&
+                        place.duration !== null
+                        ? `${place.duration} hrs`
+                        : "Duration unavailable";
+
+                marker.bindPopup(`
+                <div class="tourism-map-popup">
+                    <strong>${escapeHtml(placeName)}</strong>
+                    <br>
+                    <span>${escapeHtml(category)}</span>
+                    <br>
+                    <span>Day ${dayData.day}</span>
+                    <br>
+                    <span>${escapeHtml(duration)}</span>
+                </div>
+            `);
+
+                tourismMapMarkers.push(marker);
+
+                bounds.push([
+                    latitude,
+                    longitude
+                ]);
+            });
+        });
+
+        if (bounds.length === 1) {
+            tourismMap.setView(
+                bounds[0],
+                15
+            );
+        } else if (bounds.length > 1) {
+            tourismMap.fitBounds(
+                bounds,
+                {
+                    padding: [30, 30]
+                }
+            );
+        }
     }
 
     // --------------------------------------------------------
@@ -1387,6 +1585,8 @@ document.addEventListener("DOMContentLoaded", () => {
             container,
             currentItinerary
         );
+
+        updateTourismMapFromItinerary(currentItinerary);
     }
 
     // --------------------------------------------------------
@@ -3429,320 +3629,168 @@ document.addEventListener("DOMContentLoaded", () => {
         "TravelBytes AI frontend ready."
     );
 
-// ========================================================
-// CLIENT FEEDBACK
-// ========================================================
+    // ========================================================
+    // CLIENT FEEDBACK
+    // ========================================================
 
-const openFeedbackBtn =
-    document.getElementById(
-        "openFeedbackBtn"
-    );
-
-const closeFeedbackBtn =
-    document.getElementById(
-        "closeFeedbackBtn"
-    );
-
-const feedbackModal =
-    document.getElementById(
-        "feedbackModal"
-    );
-
-const feedbackForm =
-    document.getElementById(
-        "feedbackForm"
-    );
-
-const feedbackRating =
-    document.getElementById(
-        "feedbackRating"
-    );
-
-const feedbackRatingValue =
-    document.getElementById(
-        "feedbackRatingValue"
-    );
-
-const feedbackStatus =
-    document.getElementById(
-        "feedbackStatus"
-    );
-
-const submitFeedbackBtn =
-    document.getElementById(
-        "submitFeedbackBtn"
-    );
-
-
-function openFeedbackModal() {
-
-    if (!feedbackModal) {
-        return;
-    }
-
-    feedbackModal.classList.add(
-        "active"
-    );
-
-    feedbackModal.setAttribute(
-        "aria-hidden",
-        "false"
-    );
-
-    document.body.classList.add(
-        "feedback-open"
-    );
-}
-
-
-function closeFeedbackModal() {
-
-    if (!feedbackModal) {
-        return;
-    }
-
-    feedbackModal.classList.remove(
-        "active"
-    );
-
-    feedbackModal.setAttribute(
-        "aria-hidden",
-        "true"
-    );
-
-    document.body.classList.remove(
-        "feedback-open"
-    );
-}
-
-
-if (openFeedbackBtn) {
-
-    openFeedbackBtn.addEventListener(
-        "click",
-        openFeedbackModal
-    );
-}
-
-
-if (closeFeedbackBtn) {
-
-    closeFeedbackBtn.addEventListener(
-        "click",
-        closeFeedbackModal
-    );
-}
-
-
-if (feedbackModal) {
-
-    const overlay =
-        feedbackModal.querySelector(
-            ".feedback-modal-overlay"
+    const openFeedbackBtn =
+        document.getElementById(
+            "openFeedbackBtn"
         );
 
-    if (overlay) {
+    const closeFeedbackBtn =
+        document.getElementById(
+            "closeFeedbackBtn"
+        );
 
-        overlay.addEventListener(
+    const feedbackModal =
+        document.getElementById(
+            "feedbackModal"
+        );
+
+    const feedbackForm =
+        document.getElementById(
+            "feedbackForm"
+        );
+
+    const feedbackRating =
+        document.getElementById(
+            "feedbackRating"
+        );
+
+    const feedbackRatingValue =
+        document.getElementById(
+            "feedbackRatingValue"
+        );
+
+    const feedbackStatus =
+        document.getElementById(
+            "feedbackStatus"
+        );
+
+    const submitFeedbackBtn =
+        document.getElementById(
+            "submitFeedbackBtn"
+        );
+
+
+    function openFeedbackModal() {
+
+        if (!feedbackModal) {
+            return;
+        }
+
+        feedbackModal.classList.add(
+            "active"
+        );
+
+        feedbackModal.setAttribute(
+            "aria-hidden",
+            "false"
+        );
+
+        document.body.classList.add(
+            "feedback-open"
+        );
+    }
+
+
+    function closeFeedbackModal() {
+
+        if (!feedbackModal) {
+            return;
+        }
+
+        feedbackModal.classList.remove(
+            "active"
+        );
+
+        feedbackModal.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+        document.body.classList.remove(
+            "feedback-open"
+        );
+    }
+
+
+    if (openFeedbackBtn) {
+
+        openFeedbackBtn.addEventListener(
+            "click",
+            openFeedbackModal
+        );
+    }
+
+
+    if (closeFeedbackBtn) {
+
+        closeFeedbackBtn.addEventListener(
             "click",
             closeFeedbackModal
         );
     }
-}
 
 
-document.addEventListener(
-    "keydown",
-    (event) => {
+    if (feedbackModal) {
 
-        if (
-            event.key === "Escape" &&
-            feedbackModal?.classList.contains(
-                "active"
-            )
-        ) {
+        const overlay =
+            feedbackModal.querySelector(
+                ".feedback-modal-overlay"
+            );
 
-            closeFeedbackModal();
+        if (overlay) {
+
+            overlay.addEventListener(
+                "click",
+                closeFeedbackModal
+            );
         }
     }
-);
 
 
-if (feedbackRating) {
-
-    feedbackRating.addEventListener(
-        "click",
+    document.addEventListener(
+        "keydown",
         (event) => {
 
-            const button =
-                event.target.closest(
-                    "[data-rating]"
-                );
-
-            if (!button) {
-                return;
-            }
-
-            const rating =
-                Number(
-                    button.dataset.rating
-                );
-
-            feedbackRatingValue.value =
-                String(rating);
-
-
-            feedbackRating
-                .querySelectorAll(
-                    "[data-rating]"
-                )
-                .forEach((star) => {
-
-                    const starRating =
-                        Number(
-                            star.dataset.rating
-                        );
-
-                    star.classList.toggle(
-                        "selected",
-                        starRating <= rating
-                    );
-                });
-        }
-    );
-}
-
-
-if (feedbackForm) {
-
-    feedbackForm.addEventListener(
-        "submit",
-        async (event) => {
-
-            event.preventDefault();
-
-
-            const rating =
-                Number(
-                    feedbackRatingValue?.value ||
-                    0
-                );
-
-            const message =
-                document
-                    .getElementById(
-                        "feedbackMessage"
-                    )
-                    ?.value
-                    .trim() || "";
-
-
             if (
-                rating < 1 ||
-                rating > 5
+                event.key === "Escape" &&
+                feedbackModal?.classList.contains(
+                    "active"
+                )
             ) {
 
-                feedbackStatus.textContent =
-                    "Please select a rating.";
-
-                feedbackStatus.className =
-                    "feedback-status error";
-
-                return;
+                closeFeedbackModal();
             }
+        }
+    );
 
 
-            if (!message) {
+    if (feedbackRating) {
 
-                feedbackStatus.textContent =
-                    "Please enter your feedback.";
+        feedbackRating.addEventListener(
+            "click",
+            (event) => {
 
-                feedbackStatus.className =
-                    "feedback-status error";
-
-                return;
-            }
-
-
-            submitFeedbackBtn.disabled =
-                true;
-
-            submitFeedbackBtn.textContent =
-                "Saving Feedback...";
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/api/feedback",
-                        {
-                            method: "POST",
-
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-
-                            body:
-                                JSON.stringify({
-
-                                    name:
-                                        document
-                                            .getElementById(
-                                                "feedbackName"
-                                            )
-                                            ?.value
-                                            .trim() || "",
-
-                                    email:
-                                        document
-                                            .getElementById(
-                                                "feedbackEmail"
-                                            )
-                                            ?.value
-                                            .trim() || "",
-
-                                    rating:
-                                        rating,
-
-                                    message:
-                                        message,
-
-                                    destination:
-                                        currentDestination ||
-                                        ""
-                                })
-                        }
+                const button =
+                    event.target.closest(
+                        "[data-rating]"
                     );
 
-
-                const data =
-                    await safeJson(
-                        response
-                    );
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        data?.message ||
-                        "Unable to save feedback."
-                    );
+                if (!button) {
+                    return;
                 }
 
-
-                feedbackStatus.textContent =
-                    "✓ Thank you! Your feedback has been saved.";
-
-                feedbackStatus.className =
-                    "feedback-status success";
-
-
-                feedbackForm.reset();
+                const rating =
+                    Number(
+                        button.dataset.rating
+                    );
 
                 feedbackRatingValue.value =
-                    "0";
+                    String(rating);
+
 
                 feedbackRating
                     .querySelectorAll(
@@ -3750,55 +3798,207 @@ if (feedbackForm) {
                     )
                     .forEach((star) => {
 
-                        star.classList.remove(
-                            "selected"
+                        const starRating =
+                            Number(
+                                star.dataset.rating
+                            );
+
+                        star.classList.toggle(
+                            "selected",
+                            starRating <= rating
                         );
                     });
+            }
+        );
+    }
 
 
-                submitFeedbackBtn.textContent =
-                    "Feedback Saved";
+    if (feedbackForm) {
+
+        feedbackForm.addEventListener(
+            "submit",
+            async (event) => {
+
+                event.preventDefault();
 
 
-                setTimeout(
-                    () => {
+                const rating =
+                    Number(
+                        feedbackRatingValue?.value ||
+                        0
+                    );
 
-                        closeFeedbackModal();
-
-                        submitFeedbackBtn.disabled =
-                            false;
-
-                        submitFeedbackBtn.textContent =
-                            "Send Feedback";
-
-                    },
-                    1600
-                );
+                const message =
+                    document
+                        .getElementById(
+                            "feedbackMessage"
+                        )
+                        ?.value
+                        .trim() || "";
 
 
-            } catch (error) {
+                if (
+                    rating < 1 ||
+                    rating > 5
+                ) {
 
-                console.error(
-                    "Feedback error:",
-                    error
-                );
+                    feedbackStatus.textContent =
+                        "Please select a rating.";
 
-                feedbackStatus.textContent =
-                    error.message ||
-                    "Unable to save feedback.";
+                    feedbackStatus.className =
+                        "feedback-status error";
 
-                feedbackStatus.className =
-                    "feedback-status error";
+                    return;
+                }
+
+
+                if (!message) {
+
+                    feedbackStatus.textContent =
+                        "Please enter your feedback.";
+
+                    feedbackStatus.className =
+                        "feedback-status error";
+
+                    return;
+                }
+
 
                 submitFeedbackBtn.disabled =
-                    false;
+                    true;
 
                 submitFeedbackBtn.textContent =
-                    "Send Feedback";
+                    "Saving Feedback...";
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            "/api/feedback",
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify({
+
+                                        name:
+                                            document
+                                                .getElementById(
+                                                    "feedbackName"
+                                                )
+                                                ?.value
+                                                .trim() || "",
+
+                                        email:
+                                            document
+                                                .getElementById(
+                                                    "feedbackEmail"
+                                                )
+                                                ?.value
+                                                .trim() || "",
+
+                                        rating:
+                                            rating,
+
+                                        message:
+                                            message,
+
+                                        destination:
+                                            currentDestination ||
+                                            ""
+                                    })
+                            }
+                        );
+
+
+                    const data =
+                        await safeJson(
+                            response
+                        );
+
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            data?.message ||
+                            "Unable to save feedback."
+                        );
+                    }
+
+
+                    feedbackStatus.textContent =
+                        "✓ Thank you! Your feedback has been saved.";
+
+                    feedbackStatus.className =
+                        "feedback-status success";
+
+
+                    feedbackForm.reset();
+
+                    feedbackRatingValue.value =
+                        "0";
+
+                    feedbackRating
+                        .querySelectorAll(
+                            "[data-rating]"
+                        )
+                        .forEach((star) => {
+
+                            star.classList.remove(
+                                "selected"
+                            );
+                        });
+
+
+                    submitFeedbackBtn.textContent =
+                        "Feedback Saved";
+
+
+                    setTimeout(
+                        () => {
+
+                            closeFeedbackModal();
+
+                            submitFeedbackBtn.disabled =
+                                false;
+
+                            submitFeedbackBtn.textContent =
+                                "Send Feedback";
+
+                        },
+                        1600
+                    );
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Feedback error:",
+                        error
+                    );
+
+                    feedbackStatus.textContent =
+                        error.message ||
+                        "Unable to save feedback.";
+
+                    feedbackStatus.className =
+                        "feedback-status error";
+
+                    submitFeedbackBtn.disabled =
+                        false;
+
+                    submitFeedbackBtn.textContent =
+                        "Send Feedback";
+                }
             }
-        }
-    );
-}
+        );
+    }
 
 
 });

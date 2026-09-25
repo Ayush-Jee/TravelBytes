@@ -2368,3 +2368,25 @@ body.feedback-open {
     }
 
 }
+
+/* =========================================================
+   REAL TOURISM MAP — LEAFLET DISPLAY FIX
+========================================================= */
+
+.tourism-map {
+    width: 100%;
+    height: 420px;
+    min-height: 420px;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+}
+
+.tourism-map .leaflet-container {
+    width: 100%;
+    height: 100%;
+}
+
+.map-loading {
+    display: none;
+}

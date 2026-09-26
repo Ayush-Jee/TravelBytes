@@ -5,6 +5,304 @@
 let tourismMap = null;
 let tourismMapMarkers = [];
 
+let userCurrentLocation = null;
+
+function getUserCurrentLocation() {
+
+    return new Promise((resolve) => {
+
+        if (!navigator.geolocation) {
+
+            console.warn(
+                "Browser geolocation is not supported."
+            );
+
+            resolve(null);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+
+            (position) => {
+
+                userCurrentLocation = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy
+                };
+
+                console.log(
+                    "📍 User current location:",
+                    userCurrentLocation
+                );
+
+                resolve(userCurrentLocation);
+            },
+
+            (error) => {
+
+                console.warn(
+                    "📍 Current location unavailable:",
+                    error.message
+                );
+
+                userCurrentLocation = null;
+
+                resolve(null);
+            },
+
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 60000
+            }
+        );
+    });
+}
+
+// --------------------------------------------------------
+// UPDATE ITINERARY DISTANCES FROM USER LOCATION
+// --------------------------------------------------------
+
+async function updateItineraryDistancesFromUser() {
+
+    if (!userCurrentLocation) {
+
+        console.warn(
+            "TravelBytes AI: Current user location is unavailable."
+        );
+
+        return;
+    }
+
+    if (!Array.isArray(currentItinerary)) {
+        return;
+    }
+
+    console.log(
+        "TravelBytes AI: Updating itinerary distances from current location..."
+    );
+
+    for (const dayData of currentItinerary) {
+
+        if (!Array.isArray(dayData.places)) {
+            continue;
+        }
+
+        for (const place of dayData.places) {
+
+            const latitude = Number(
+                place.latitude
+            );
+
+            const longitude = Number(
+                place.longitude
+            );
+
+            // Custom/manual activities may not have coordinates.
+            // Do not invent a location for them.
+            if (
+                !Number.isFinite(latitude) ||
+                !Number.isFinite(longitude)
+            ) {
+                continue;
+            }
+
+            try {
+
+                const response = await fetch(
+                    `/api/route?start_lat=${encodeURIComponent(
+                        userCurrentLocation.latitude
+                    )}&start_lon=${encodeURIComponent(
+                        userCurrentLocation.longitude
+                    )}&end_lat=${encodeURIComponent(
+                        latitude
+                    )}&end_lon=${encodeURIComponent(
+                        longitude
+                    )}`
+                );
+
+                const data = await response.json();
+
+                if (
+                    !response.ok ||
+                    !data.route
+                ) {
+
+                    console.warn(
+                        "TravelBytes AI: Route unavailable for",
+                        place.name,
+                        data
+                    );
+
+                    continue;
+                }
+
+                place.user_distance_km =
+                    Number(
+                        data.route.distance_km
+                    );
+
+                place.user_travel_time_minutes =
+                    Number(
+                        data.route.duration_minutes
+                    );
+
+                console.log(
+                    `TravelBytes AI: ${place.name} → ` +
+                    `${place.user_distance_km} km, ` +
+                    `${place.user_travel_time_minutes} min`
+                );
+
+            } catch (error) {
+
+                console.warn(
+                    "TravelBytes AI: Route calculation failed for",
+                    place.name,
+                    error
+                );
+            }
+        }
+    }
+
+    // Refresh the itinerary cards with the new values.
+    refreshItineraryDisplay();
+}
+
+async function getRouteFromUserToPlace(place) {
+
+    if (!userCurrentLocation) {
+        return null;
+    }
+
+    const latitude = Number(place.latitude);
+    const longitude = Number(place.longitude);
+
+    if (
+        !Number.isFinite(latitude) ||
+        !Number.isFinite(longitude)
+    ) {
+        return null;
+    }
+
+    try {
+
+        const params = new URLSearchParams({
+            start_lat: userCurrentLocation.latitude,
+            start_lon: userCurrentLocation.longitude,
+            end_lat: latitude,
+            end_lon: longitude
+        });
+
+        const response = await fetch(
+            `/api/route?${params.toString()}`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.route) {
+
+            console.warn(
+                "Route calculation failed for:",
+                place.name,
+                data
+            );
+
+            return null;
+        }
+
+        return {
+            distance_km: Number(
+                data.route.distance_km
+            ),
+            travel_time_minutes: Number(
+                data.route.duration_minutes
+            )
+        };
+
+    } catch (error) {
+
+        console.warn(
+            "Route request error for:",
+            place.name,
+            error
+        );
+
+        return null;
+    }
+}
+
+
+async function updateItineraryDistancesFromUser() {
+
+    if (!userCurrentLocation) {
+
+        console.warn(
+            "Current user location is unavailable."
+        );
+
+        return;
+    }
+
+    if (
+        !Array.isArray(window.currentItinerary) ||
+        window.currentItinerary.length === 0
+    ) {
+
+        return;
+    }
+
+    // console.log(
+    //     "📍 Updating itinerary distances from user location..."
+    // );
+
+    for (const dayData of window.currentItinerary) {
+        if (
+            !dayData ||
+            !Array.isArray(dayData.places)
+        ) {
+
+            continue;
+        }
+
+        for (const place of dayData.places) {
+
+            if (!place) {
+                continue;
+            }
+
+            const route =
+                await getRouteFromUserToPlace(place);
+
+            if (!route) {
+                continue;
+            }
+
+            place.user_distance_km =
+                route.distance_km;
+
+            place.user_travel_time_minutes =
+                route.travel_time_minutes;
+
+            // console.log(
+            //     `📍 ${place.name}: ` +
+            //     `${route.distance_km} km, ` +
+            //     `${route.travel_time_minutes} min`
+            // );
+        }
+    }
+
+    window.dispatchEvent(
+        new CustomEvent("travelbytes-distances-updated")
+    );
+
+    // renderItinerary(window.currentItinerary);
+
+    console.log(
+        "✅ All available itinerary distances updated."
+    );
+}
+
 
 
 // ============================================================
@@ -13,6 +311,7 @@ let tourismMapMarkers = [];
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
+    getUserCurrentLocation();
     console.log("TravelBytes AI frontend loaded");
 
     // --------------------------------------------------------
@@ -51,6 +350,65 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let ecosystemItems = [];
     let currentEcosystemCategory = "all";
+
+
+    // --------------------------------------------------------
+    // USER CURRENT LOCATION
+    // --------------------------------------------------------
+
+    // let userCurrentLocation = null;
+
+    function getUserCurrentLocation() {
+
+        if (!navigator.geolocation) {
+
+            console.warn(
+                "Browser geolocation is not supported."
+            );
+
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+
+                userCurrentLocation = {
+                    latitude:
+                        Number(
+                            position.coords.latitude
+                        ),
+
+                    longitude:
+                        Number(
+                            position.coords.longitude
+                        )
+                };
+
+                // console.log(
+                //     "TravelBytes AI: User current location detected:",
+                //     userCurrentLocation
+                // );
+
+                updateItineraryDistancesFromUser();
+            },
+
+            (error) => {
+
+                userCurrentLocation = null;
+
+                console.warn(
+                    "TravelBytes AI: Current location unavailable.",
+                    error.message
+                );
+            },
+
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 60000
+            }
+        );
+    }
 
     // --------------------------------------------------------
     // INTEREST BUTTONS
@@ -190,6 +548,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 []
             );
 
+        window.currentItinerary = currentItinerary;
+
         previousItinerary =
             deepClone(currentItinerary);
 
@@ -209,6 +569,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // AI DYNAMIC ITINERARY FIRST
         renderItinerary(currentItinerary);
 
+        updateItineraryDistancesFromUser();
+
         initializeTourismMap();
 
         centerTourismMapOnDestination();
@@ -216,11 +578,18 @@ document.addEventListener("DOMContentLoaded", () => {
         updateTourismMapFromItinerary(currentItinerary);
 
         // AI RECOMMENDATION SECOND
-        renderRecommendedPlaces(
+        const recommendedPlaces =
             data.recommended_places ||
             data.recommendations ||
             data.places ||
-            []
+            [];
+
+        renderRecommendedPlaces(
+            recommendedPlaces
+        );
+
+        updateRecommendedPlacesDistances(
+            recommendedPlaces
         );
 
         if (data.weather) {
@@ -706,6 +1075,15 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        const existingSections =
+            result.querySelectorAll(
+                ".recommended-section"
+            );
+
+        existingSections.forEach((oldSection) => {
+            oldSection.remove();
+        });
+
         const section =
             document.createElement("section");
 
@@ -716,6 +1094,11 @@ document.addEventListener("DOMContentLoaded", () => {
             .slice(0, 8)
             .map((place) => {
 
+                place.distance_km =
+                    place.user_distance_km ??
+                    place.distance_km ??
+                    null;
+
                 const rating =
                     place.rating ??
                     null;
@@ -725,7 +1108,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     null;
 
                 const distance =
+                    place.user_distance_km ??
                     place.distance_km ??
+                    null;
+
+                const travelTime =
+                    place.user_travel_time_minutes ??
                     null;
 
                 const reason =
@@ -773,12 +1161,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
                                 ${distance !== null
                         ? `
-                                        <span>
-                                            📍
-                                            ${Number(distance).toFixed(1)}
-                                            km
-                                        </span>
-                                        `
+                                    <span>
+                                        📍
+                                        ${Number(distance).toFixed(1)}
+                                     km
+                                    </span>
+                                    `
+                        : ""
+                    }
+
+                                ${travelTime !== null
+                        ? `
+                                            <span>
+                                                🚗
+                                                ${Math.round(
+                            Number(travelTime)
+                        )}
+                                                min
+                                            </span>
+                                            `
                         : ""
                     }
 
@@ -838,6 +1239,102 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
 
         result.appendChild(section);
+    }
+
+    async function updateRecommendedPlacesDistances(places) {
+
+        if (!userCurrentLocation) {
+            console.warn(
+                "TravelBytes AI: Current user location is unavailable for recommendations."
+            );
+            return;
+        }
+
+        if (!Array.isArray(places)) {
+            return;
+        }
+
+        console.log(
+            "📍 Updating AI recommendation distances from user location..."
+        );
+
+        for (const place of places) {
+
+            const latitude =
+                Number(place.latitude);
+
+            const longitude =
+                Number(place.longitude);
+
+            if (
+                !Number.isFinite(latitude) ||
+                !Number.isFinite(longitude)
+            ) {
+                continue;
+            }
+
+            try {
+
+                const response = await fetch(
+                    `/api/route?start_lat=${encodeURIComponent(
+                        userCurrentLocation.latitude
+                    )}&start_lon=${encodeURIComponent(
+                        userCurrentLocation.longitude
+                    )}&end_lat=${encodeURIComponent(
+                        latitude
+                    )}&end_lon=${encodeURIComponent(
+                        longitude
+                    )}`
+                );
+
+                const data =
+                    await response.json();
+
+                if (
+                    !response.ok ||
+                    !data.route
+                ) {
+                    continue;
+                }
+
+                place.user_distance_km =
+                    Number(
+                        data.route.distance_km
+                    );
+
+                place.user_travel_time_minutes =
+                    Number(
+                        data.route.duration_minutes
+                    );
+
+                // console.log(
+                //     `📍 Recommendation ${place.name}: ` +
+                //     `${place.user_distance_km} km, ` +
+                //     `${place.user_travel_time_minutes} min`
+                // );
+
+            } catch (error) {
+
+                console.warn(
+                    "TravelBytes AI: Recommendation route failed:",
+                    place.name,
+                    error
+                );
+            }
+        }
+        console.log(
+            "✅ FINAL recommendation distance before render:",
+            places.map(place => ({
+                name: place.name,
+                old_distance_km: place.distance_km,
+                current_distance_km: place.user_distance_km,
+                travel_time_min: place.user_travel_time_minutes
+            }))
+        );
+
+
+        renderRecommendedPlaces(places);
+
     }
 
     function getCategoryEmoji(category) {
@@ -1103,16 +1600,39 @@ document.addEventListener("DOMContentLoaded", () => {
             )}h
                             </span>
 
-                            ${place.distance_km !== undefined
+                            ${place.user_distance_km !== undefined
                 ? `
-                                    <span>
-                                        📍
-                                        ${Number(
-                    place.distance_km
+        <span>
+            📍
+            ${Number(
+                    place.user_distance_km
                 ).toFixed(1)} km
-                                    </span>
-                                    `
-                : ""
+        </span>
+
+        ${place.user_travel_time_minutes !== undefined
+                    ? `
+                <span>
+                    🚗
+                    ${Math.round(
+                        Number(
+                            place.user_travel_time_minutes
+                        )
+                    )} min
+                </span>
+                `
+                    : ""
+                }
+        `
+                : place.distance_km !== undefined
+                    ? `
+            <span>
+                📍
+                ${Number(
+                        place.distance_km
+                    ).toFixed(1)} km
+            </span>
+            `
+                    : ""
             }
 
                         </div>
@@ -1588,6 +2108,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         updateTourismMapFromItinerary(currentItinerary);
     }
+
+    window.addEventListener(
+        "travelbytes-distances-updated",
+        function () {
+
+            refreshItineraryDisplay();
+
+        }
+    );
 
     // --------------------------------------------------------
     // PERSIST ITINERARY

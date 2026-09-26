@@ -1258,7 +1258,7 @@ document.addEventListener("DOMContentLoaded", () => {
             "📍 Updating AI recommendation distances from user location..."
         );
 
-        for (const place of places) {
+        const routeRequests = places.map(async (place) => {
 
             const latitude =
                 Number(place.latitude);
@@ -1270,7 +1270,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 !Number.isFinite(latitude) ||
                 !Number.isFinite(longitude)
             ) {
-                continue;
+                return;
             }
 
             try {
@@ -1294,7 +1294,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     !response.ok ||
                     !data.route
                 ) {
-                    continue;
+                    return;
                 }
 
                 place.user_distance_km =
@@ -1321,7 +1321,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     error
                 );
             }
-        }
+        });
+
+        await Promise.all(routeRequests);
+
         console.log(
             "✅ FINAL recommendation distance before render:",
             places.map(place => ({
@@ -1331,7 +1334,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 travel_time_min: place.user_travel_time_minutes
             }))
         );
-
 
         renderRecommendedPlaces(places);
 
